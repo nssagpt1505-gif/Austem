@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>금형개발 원소재 설계 가이드 시스템</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SheetJS (XLSX) 라이브러리 추가 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col relative">
+
+  <!-- Toast Notification Wrapper -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="bg-blue-600 p-2.5 rounded-lg text-white shadow-lg shadow-blue-500/20">
+        <i class="fa-solid fa-cubes-stacked text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-slate-50 tracking-wide">M-Specs Pro</h1>
+        <p class="text-xs text-slate-400">금형개발 원소재 데이터베이스 & 설계 가이드 시스템</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3 text-xs">
+      <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+        <span class="text-slate-400 font-medium">연동 상태:</span>
+        <span id="statusSteel" class="flex items-center gap-1 text-rose-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Steel 미연동</span>
+        <span class="text-slate-700">|</span>
+        <span id="statusAlu" class="flex items-center gap-1 text-rose-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Aluminum 미연동</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Left Panel: Material Selector & Quick Settings (4 Columns) -->
+    <section class="lg:col-span-4 flex flex-col space-y-6">
+      
+      <!-- Material Search and Selector Card -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl backdrop-blur-md">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-md font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass text-blue-500"></i>
+            원소재 선택
+          </h2>
+          <div class="flex gap-1.5">
+            <button id="addMaterialBtn" class="text-[11px] bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded-md transition duration-200 border border-blue-500/30 flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> 개별 추가
+            </button>
+            <button id="excelBatchBtn" class="text-[11px] bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-2 py-1 rounded-md transition duration-200 border border-emerald-500/30 flex items-center gap-1">
+              <i class="fa-solid fa-file-excel"></i> 엑셀 일괄등록
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative mb-4">
+          <input type="text" id="searchInput" placeholder="강종명 검색 (예: SPCC, A1050, DP980...)" 
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition duration-150">
+          <span class="absolute left-3 top-2.5 text-slate-500"><i class="fa-solid fa-search"></i></span>
+        </div>
+
+        <!-- Material Category Filter Tabs -->
+        <div class="flex border-b border-slate-800 mb-4 overflow-x-auto text-xs pb-1" id="categoryTabs">
+          <button class="px-3 py-1.5 text-blue-400 border-b-2 border-blue-500 font-medium whitespace-nowrap focus:outline-none" data-category="ALL">전체</button>
+          <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none" data-category="냉연/도금">냉연/도금</button>
+          <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none" data-category="고장력강">고장력강(AHSS)</button>
+          <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none" data-category="열연">열연</button>
+          <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none" data-category="알루미늄">알루미늄</button>
+          <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none" data-category="특수재/기타">특수재/기타</button>
+        </div>
+
+        <!-- Material List -->
+        <div class="space-y-2 max-h-[280px] overflow-y-auto pr-1" id="materialList">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Parameter Customizer (Thickness Selector UPGRADED up to 10.0mm) -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl backdrop-blur-md">
+        <h2 class="text-md font-semibold text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-teal-500"></i>
+          두께(Thickness) 설정
+        </h2>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-sm mb-1.5">
+              <span class="text-slate-400 font-medium">설계 두께 (t)</span>
+              <span class="text-teal-400 font-semibold" id="thicknessVal">1.2 mm</span>
+            </div>
+            <!-- Max value upgraded to 10.0 -->
+            <input type="range" id="thicknessSlider" min="0.5" max="10.0" step="0.1" value="1.2" 
+              class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+              <span>0.5 mm</span>
+              <span>3.0 mm</span>
+              <span>6.0 mm</span>
+              <span>10.0 mm</span>
+            </div>
+          </div>
+
+          <!-- Quick Presets - Adjusted for up to 10.0t scale -->
+          <div>
+            <span class="text-xs text-slate-400 block mb-2 font-medium">주요 두께 프리셋</span>
+            <div class="grid grid-cols-4 gap-1.5" id="thicknessPresets">
+              <button class="py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition" data-val="1.2">1.2t</button>
+              <button class="py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition" data-val="3.2">3.2t</button>
+              <button class="py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition" data-val="6.0">6.0t</button>
+              <button class="py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition" data-val="9.0">9.0t</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPGRADED: Manual CSV Import Support -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl backdrop-blur-md">
+        <h2 class="text-xs font-bold text-slate-300 mb-2.5 flex items-center gap-2">
+          <i class="fa-solid fa-file-csv text-blue-400"></i>
+          CSV 파일 개별 직접 연동 (자동인식 실패 대비)
+        </h2>
+        <p class="text-[10px] text-slate-500 mb-3 leading-relaxed">
+          브라우저 환경에 따라 자동 인식이 차단된 경우, 아래 버튼을 통해 탐색기에서 직접 CSV 파일을 열어주시면 즉시 병합 업데이트됩니다.
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btnManualSteel" class="py-2 text-[11px] bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-slate-300 font-semibold transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-upload"></i> Steel.csv 로드
+          </button>
+          <button id="btnManualAlu" class="py-2 text-[11px] bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-slate-300 font-semibold transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-upload"></i> Aluminum.csv 로드
+          </button>
+          <input type="file" id="fileManualSteel" class="hidden" accept=".csv">
+          <input type="file" id="fileManualAlu" class="hidden" accept=".csv">
+        </div>
+      </div>
+
+      <!-- Action Box -->
+      <div class="bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between items-start gap-3">
+        <div class="text-xs text-slate-400">
+          <p class="font-semibold text-slate-300 mb-1">💡 데이터 관리 팁</p>
+          신규 등록된 강종 데이터는 브라우저 내부에 저장되므로, 페이지를 다시 방문해도 유지됩니다. 안전하게 보관하려면 하단의 백업을 권장합니다.
+        </div>
+        <div class="flex gap-2 w-full">
+          <button id="exportDbBtn" class="flex-1 text-center py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-export"></i> 백업
+          </button>
+          <button id="importDbBtn" class="flex-1 text-center py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-import"></i> 가져오기
+          </button>
+          <input type="file" id="importFile" class="hidden" accept=".json">
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Panel: Core Specification Display (8 Columns) -->
+    <section class="lg:col-span-8 flex flex-col space-y-6">
+
+      <!-- Selected Material Info Title Header -->
+      <div class="bg-slate-950/40 border border-slate-800 rounded-xl p-6 shadow-xl backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 text-xs font-semibold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase" id="currentCategoryBadge">고장력강</span>
+            <span class="text-sm text-slate-400" id="currentStandardBadge">KS / JIS 표준 규격품</span>
+          </div>
+          <h2 class="text-3xl font-extrabold text-white mt-1.5 tracking-tight flex items-center gap-2">
+            <span id="currentMaterialName">DP980</span>
+            <span class="text-slate-400 text-xl font-normal" id="currentThicknessLabel">(t = 1.2mm 적용 중)</span>
+          </h2>
+          <p class="text-sm text-slate-400 mt-1" id="currentMaterialDesc">초고장력 이중상 복합조직강 (Dual Phase), 인장강도 980MPa급 사이드 멤버 등 구조 부재용</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="editCurrentMaterialBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 px-4 py-2.5 rounded-lg text-xs font-semibold transition flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square"></i> 데이터 편집
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Summary Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- 1. Mechanical Properties Card -->
+        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded bg-blue-500"></span>
+                1. 기계적 성질 (Mechanical Properties)
+              </h3>
+              <i class="fa-solid fa-chart-line text-slate-500 text-sm"></i>
+            </div>
+            
+            <div class="space-y-3.5">
+              <div class="flex justify-between items-center text-sm py-1 border-b border-slate-900">
+                <span class="text-slate-400">인장강도 (Tensile Strength)</span>
+                <span class="font-bold text-slate-100" id="propTensile">980 MPa 이상</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-1 border-b border-slate-900">
+                <span class="text-slate-400">항복강도 (Yield Strength)</span>
+                <span class="font-semibold text-slate-200" id="propYield">550 - 730 MPa</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-1 border-b border-slate-900">
+                <span class="text-slate-400">연신율 (Elongation - El)</span>
+                <span class="font-semibold text-slate-200" id="propElongation">12% 이상 (A50)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-1">
+                <span class="text-slate-400">가공 경화 지수 (n-value)</span>
+                <span class="font-semibold text-slate-200" id="propNValue">0.14 (대표치)</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 pt-3 border-t border-slate-900 text-[11px] text-slate-500 flex items-center gap-1.5">
+            <i class="fa-solid fa-info-circle"></i> 성형 한계선(FLD) 예측 및 스프링백 분석 시 입력 원소재 물리값입니다.
+          </div>
+        </div>
+
+        <!-- 2. Basic Design Guidelines Card -->
+        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded bg-teal-500"></span>
+                2. 설계 기본정보 (t = <span id="guideThicknessLabel">1.2</span>mm 기준)
+              </h3>
+              <i class="fa-solid fa-compass-drafting text-slate-500 text-sm"></i>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block mb-0.5">최소 Trim 간격</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-lg font-bold text-teal-400" id="designTrim">1.8</span>
+                  <span class="text-[10px] text-slate-400">mm</span>
+                </div>
+                <span class="text-[9px] text-slate-500" id="designTrimFormula">t * 1.5 기준</span>
+              </div>
+
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block mb-0.5">최소 Hole Size</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-lg font-bold text-teal-400" id="designHole">2.4</span>
+                  <span class="text-[10px] text-slate-400">mm</span>
+                </div>
+                <span class="text-[9px] text-slate-500" id="designHoleFormula">t * 2.0 기준</span>
+              </div>
+
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block mb-0.5">최소 Bending "R"</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-lg font-bold text-teal-400" id="designBend">3.6</span>
+                  <span class="text-[10px] text-slate-400">mm</span>
+                </div>
+                <span class="text-[9px] text-slate-500" id="designBendFormula">t * 3.0 기준</span>
+              </div>
+
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block mb-0.5">적용 스프링백 계수</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-lg font-bold text-teal-400" id="designSpringback">8.5°</span>
+                  <span class="text-[10px] text-slate-400">편차 발생</span>
+                </div>
+                <span class="text-[9px] text-slate-500">R, 각도별 상이</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-900 text-[11px] text-slate-500 flex items-center justify-between">
+            <span class="flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 고강도 강재일수록 최소 치수 기준이 엄격해집니다.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- UPGRADED: Real-time Press Force Calculator (Tonnage Estimation) -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded bg-purple-500"></span>
+            프레스 금형 가공력 계산기 (Force Calculator)
+          </h3>
+          <span class="text-xs text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 flex items-center gap-1">
+            <i class="fa-solid fa-calculator text-purple-400"></i> 실시간 연동식
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Shear Force Calculator Block -->
+          <div class="bg-slate-900/40 border border-slate-800/80 p-4 rounded-lg flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-scissors text-blue-400"></i> 전단력 계산 (Shearing Force)
+                </h4>
+                <span class="text-[10px] text-slate-500 font-mono">P = L × t × τ / 9800</span>
+              </div>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">총 전단(피어싱/트림) 길이 (mm)</label>
+                  <div class="relative">
+                    <input type="number" id="inputShearLength" value="500" min="0" step="10"
+                      class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 pl-3 pr-12 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-3 top-1.5 text-xs text-slate-500">mm</span>
+                  </div>
+                </div>
+                <div class="text-[11px] text-slate-400 space-y-1 bg-slate-950/60 p-2.5 rounded border border-slate-800/60">
+                  <div class="flex justify-between">
+                    <span>적용 인장강도:</span>
+                    <span class="font-semibold text-slate-200" id="calcShearTs">980 MPa</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>예상 전단강도 ($\tau \approx 80\%$):</span>
+                    <span class="font-semibold text-slate-200" id="calcShearStrength">784 MPa</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>적용 소판 두께 ($t$):</span>
+                    <span class="font-semibold text-slate-200" id="calcShearThickness">1.2 mm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+              <span class="text-xs text-slate-400 font-medium">소요 전단력:</span>
+              <div class="flex items-baseline gap-1">
+                <span class="text-xl font-extrabold text-blue-400" id="resultShearForce">48.0</span>
+                <span class="text-xs text-slate-400 font-bold">ton</span>
+                <span class="text-[10px] text-slate-500 ml-1" id="resultShearSafety">(안전율 30% 포함: <span id="resultShearSafetyVal">62.4</span>t)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forming Force Calculator Block -->
+          <div class="bg-slate-900/40 border border-slate-800/80 p-4 rounded-lg flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-notch text-teal-400"></i> 성형/굽힘력 계산 (Forming Force)
+                </h4>
+                <span class="text-[10px] text-slate-500 font-mono">P = C × L × t² × TS / V</span>
+              </div>
+              <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">총 성형 길이 (mm)</label>
+                    <div class="relative">
+                      <input type="number" id="inputFormingLength" value="300" min="0" step="10"
+                        class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 pl-3 pr-10 text-sm text-slate-200 focus:outline-none focus:border-teal-500">
+                      <span class="absolute right-3 top-1.5 text-xs text-slate-500">mm</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">성형 형태 (C)</label>
+                    <select id="inputFormingType" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 px-2 text-sm text-slate-200 focus:outline-none focus:border-teal-500">
+                      <option value="1.33" selected>V-Bending (C=1.33)</option>
+                      <option value="0.33">U-Bending (C=0.33)</option>
+                      <option value="1.67">Channel-Bend (C=1.67)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">다이 폭 ($V$-개구부)</label>
+                    <select id="inputFormingDieWidth" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 px-2 text-sm text-slate-200 focus:outline-none focus:border-teal-500">
+                      <option value="8" selected>8t 기준</option>
+                      <option value="6">6t 기준</option>
+                      <option value="10">10t 기준</option>
+                      <option value="12">12t 기준</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">다이 개구 너비 (mm)</label>
+                    <div class="relative">
+                      <input type="number" id="inputFormingDieWidthMm" value="9.6" step="0.1" readonly
+                        class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 pl-3 pr-10 text-sm text-slate-200 focus:outline-none">
+                      <span class="absolute right-3 top-1.5 text-xs text-slate-500">mm</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+              <span class="text-xs text-slate-400 font-medium">소요 성형력:</span>
+              <div class="flex items-baseline gap-1">
+                <span class="text-xl font-extrabold text-teal-400" id="resultFormingForce">12.3</span>
+                <span class="text-xs text-slate-400 font-bold">ton</span>
+                <span class="text-[10px] text-slate-500 ml-1" id="resultFormingSafety">(안전율 30% 포함: <span id="resultFormingSafetyVal">16.0</span>t)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="text-[11px] text-slate-500 mt-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-blue-400"></i> 계산된 값은 이론치 기준입니다. 실제 금형 세팅 시 날물 마모 상태, 가공유 적용 유무 및 프레스 구동 속도에 따라 설비를 선정하십시오. (추천 프레스 사양: 계산 톤수의 최소 1.3배 이상급 여유 확보 권장)
+        </p>
+      </div>
+
+      <!-- 3. Lessons Learned Card -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded bg-amber-500"></span>
+            3. 트러블 사례 및 조치사항 (Lessons Learned)
+          </h3>
+          <i class="fa-solid fa-graduation-cap text-slate-500 text-sm"></i>
+        </div>
+
+        <div class="space-y-3" id="lessonsContainer">
+          <!-- Populated dynamically with lessons learned -->
+        </div>
+      </div>
+
+      <!-- 4. Special Considerations / Specific Notes Card -->
+      <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded bg-rose-500"></span>
+            4. 성형 및 가공 특이사항 (Special Considerations)
+          </h3>
+          <i class="fa-solid fa-triangle-exclamation text-slate-500 text-sm"></i>
+        </div>
+
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-lg p-4 space-y-3 text-sm text-slate-300" id="specialNotesContainer">
+          <!-- Populated dynamically with special notes -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
+    <p>© 2026 M-Specs Pro Tool. 금형 개발 표준화 및 설계 신뢰도 향상을 위해 설계자 데이터 기반으로 운영됩니다.</p>
+  </footer>
+
+  <!-- Modal: Add / Edit Material -->
+  <div id="materialModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+        <h3 class="text-md font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-database text-blue-500"></i>
+          <span id="modalTitle">원소재 사양 및 가이드 데이터 등록/수정</span>
+        </h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-slate-200 transition text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="materialForm" class="p-6 space-y-4 text-sm">
+        <input type="hidden" id="editMaterialId">
+
+        <!-- Basic Spec Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">원소재 명칭(강종) *</label>
+            <input type="text" id="formName" required placeholder="예: DP980, SPCC, SPHC, A1050 등" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">분류 카테고리 *</label>
+            <select id="formCategory" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+              <option value="냉연/도금">냉연/도금</option>
+              <option value="고장력강">고장력강(AHSS)</option>
+              <option value="열연">열연</option>
+              <option value="알루미늄">알루미늄</option>
+              <option value="특수재/기타">특수재/기타</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">강종 간단 설명 *</label>
+            <input type="text" id="formDesc" required placeholder="예: 초고장력 이중상 복합조직강, 구조 부재용 등" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <hr class="border-slate-800 my-4">
+
+        <!-- Mechanical Properties Grid -->
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <span class="w-1.5 h-3 bg-blue-500 rounded-full"></span> 1. 기계적 성질 정보
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">인장강도 (Tensile Strength) *</label>
+            <input type="text" id="formTensile" required placeholder="예: 980 MPa 이상" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+            <p class="text-[10px] text-slate-500 mt-1">숫자가 포함되어야 전단력/성형력 연동계산이 이루어집니다.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">항복강도 (Yield Strength)</label>
+            <input type="text" id="formYield" placeholder="예: 550 - 730 MPa" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">연신율 (Elongation)</label>
+            <input type="text" id="formElongation" placeholder="예: 12% 이상 (A50)" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">가공경화지수 / n값</label>
+            <input type="text" id="formNValue" placeholder="예: 0.14" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <hr class="border-slate-800 my-4">
+
+        <!-- Design Formula Coeffs -->
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <span class="w-1.5 h-3 bg-teal-500 rounded-full"></span> 2. 설계 기본정보 두께(t) 비례 배율식 인자
+        </h4>
+        <p class="text-[11px] text-slate-500 mb-3">
+          설계 가이드는 사용자가 선택하는 두께 't' 에 대해 자동으로 곱해지는 가중치 상수를 기반으로 자동 계산됩니다.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">최소 Trim 간격 배율 (x t)</label>
+            <input type="number" step="0.1" id="formTrimCoeff" required placeholder="예: 1.5 (즉, 1.5t)" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-teal-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">최소 Hole Size 배율 (x t)</label>
+            <input type="number" step="0.1" id="formHoleCoeff" required placeholder="예: 2.0 (즉, 2.0t)" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-teal-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">최소 Bending R 배율 (x t)</label>
+            <input type="number" step="0.1" id="formBendCoeff" required placeholder="예: 3.0 (즉, 3.0t)" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-teal-500">
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">평균 스프링백 예측 보정값 / 코멘트</label>
+            <input type="text" id="formSpringback" placeholder="예: 7~10도 상당 변형 발생 우려, 오버벤딩 8도 타겟" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-teal-500">
+          </div>
+        </div>
+
+        <hr class="border-slate-800 my-4">
+
+        <!-- Lessons Learned (Multi-line / Text) -->
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <span class="w-1.5 h-3 bg-amber-500 rounded-full"></span> 3. 트러블 사례 (Lessons Learned)
+        </h4>
+        <div>
+          <label class="block text-[11px] text-slate-500 mb-1">줄바꿈(\n)으로 구분하여 최대 3개까지 입력 가능합니다.</label>
+          <textarea id="formLessons" rows="3" placeholder="예: [소재 균열] R 3.0 이하 금형 성형시 코너 크랙 반복 발생 -> 오버벤딩 설계 강화&#10;[Burr 불량] 트림 클리어런스 표준(10%) 미적용으로 금형 날 조기 파손 발생"
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 font-mono text-xs"></textarea>
+        </div>
+
+        <hr class="border-slate-800 my-4">
+
+        <!-- Special Considerations (Multi-line / Text) -->
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <span class="w-1.5 h-3 bg-rose-500 rounded-full"></span> 4. 성형 및 가공 특이사항
+        </h4>
+        <div>
+          <label class="block text-[11px] text-slate-500 mb-1">원소재 자체의 물성 특성이나 성형 가이드 등을 자유롭게 기술하세요.</label>
+          <textarea id="formNotes" rows="3" placeholder="예: - 이중상(DP) 구조의 고장력 소재는 스프링백이 일반 냉연재 대비 2~3배 높으므로 보정각도 확보가 필수적임.&#10;- 슬리팅 날 관리 수준에 따라 에지 크랙 감도가 높음."
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-rose-500 font-mono text-xs"></textarea>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" id="deleteMaterialBtn" class="bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 px-4 py-2 rounded-lg text-xs font-semibold transition mr-auto hidden">
+            <i class="fa-solid fa-trash"></i> 삭제
+          </button>
+          <button type="button" id="cancelModalBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">취소</button>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-semibold transition">저장하기</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- UPGRADED: Excel Batch Upload Modal -->
+  <div id="excelModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+        <h3 class="text-md font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-file-excel text-emerald-500"></i>
+          <span>엑셀 파일 일괄 강종 등록</span>
+        </h3>
+        <button id="closeExcelModalBtn" class="text-slate-400 hover:text-slate-200 transition text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- Explanatory Box & Template Download -->
+        <div class="bg-slate-950/40 border border-slate-800 p-4 rounded-xl text-xs text-slate-300 space-y-3 leading-relaxed">
+          <p class="font-bold text-slate-100 flex items-center gap-1.5 text-sm">
+            <i class="fa-solid fa-circle-info text-emerald-400"></i> 엑셀 일괄 등록 방법 안내
+          </p>
+          <p>
+            아래의 표준 양식 엑셀을 다운로드하여 규격에 맞게 여러 개의 강종 데이터를 입력한 뒤, 파일을 업로드하시면 한 번에 일괄 등록(병합)됩니다.
+          </p>
+          <div class="bg-slate-900/80 p-3 rounded border border-slate-800 space-y-1 text-[11px] font-mono text-slate-400">
+            <p><span class="text-emerald-400 font-bold">필수 열:</span> 강종명, 카테고리(냉연/도금, 고장력강, 열연, 알루미늄, 특수재/기타 중 선택)</p>
+            <p><span class="text-blue-400 font-bold">인자 배율:</span> Trim배율, Hole배율, Bend배율 (모두 숫자 형식이어야 함, 입력 없을 시 기본값 1.0)</p>
+            <p><span class="text-amber-400 font-bold">구분 기호:</span> 트러블사례와 특이사항은 줄바꿈 대신 <span class="text-slate-200 bg-slate-800 px-1 py-0.2 rounded font-bold">|</span> (파이프 기호)로 여러 줄을 나열할 수 있습니다.</p>
+          </div>
+          <div class="flex justify-end pt-1">
+            <button id="downloadTemplateBtn" class="bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-400 border border-emerald-500/20 px-3.5 py-1.8 rounded text-xs font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i> 표준 엑셀 템플릿 다운로드 (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- File Upload Area (Drag & Drop) -->
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/70 bg-slate-950/20 hover:bg-emerald-500/5 rounded-xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3">
+          <div class="w-14 h-14 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <p class="text-slate-200 font-semibold text-sm">클릭하거나 엑셀 파일을 이 영역으로 드래그하세요</p>
+            <p class="text-slate-500 text-xs mt-1">지원 형식: .xlsx, .xls, .csv</p>
+          </div>
+          <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <!-- Preview of imported items (if any parsed) -->
+        <div id="excelPreviewContainer" class="hidden space-y-2.5">
+          <h4 class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span>가져오기 검토 리스트 (총 <span id="excelImportCount" class="text-emerald-400">0</span>건 발견됨)</span>
+            <span class="text-[10px] text-slate-500">※ 기존에 있는 동일 강종명은 최신 값으로 업데이트됩니다.</span>
+          </h4>
+          <div class="max-h-[160px] overflow-y-auto border border-slate-800 rounded-lg bg-slate-950/30 text-xs divide-y divide-slate-800">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-900 text-slate-400 text-[10px] uppercase font-semibold">
+                  <th class="p-2 border-b border-slate-800">강종명</th>
+                  <th class="p-2 border-b border-slate-800">카테고리</th>
+                  <th class="p-2 border-b border-slate-800">인장강도</th>
+                  <th class="p-2 border-b border-slate-800">Trim/Hole/Bend</th>
+                  <th class="p-2 border-b border-slate-800">결과</th>
+                </tr>
+              </thead>
+              <tbody id="excelPreviewBody" class="text-slate-300 font-mono">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer Action -->
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button id="cancelExcelModalBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">닫기</button>
+          <button id="submitExcelBtn" disabled class="bg-emerald-600 disabled:bg-slate-800 text-white disabled:text-slate-500 px-5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-down"></i> 데이터 일괄 적용하기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // TOP-LEVEL DEFINITION: parseNumberFromString helper function
+    // Placed at the very top of script to guarantee it is defined prior to any call or DOM/load event triggers.
+    function parseNumberFromString(str, defaultValue = 300) {
+      if (!str) return defaultValue;
+      const match = str.match(/\d+/);
+      return match ? parseInt(match[0], 10) : defaultValue;
+    }
+
+    // Initial Seed Database
+    const defaultMaterials = [
+      {
+        id: "m_spcc",
+        name: "SPCC",
+        category: "냉연/도금",
+        desc: "일반 냉간 압연 강판, 굽힘성 및 디프 드로잉성이 뛰어나며 일반 자동차 및 전자부품 하우징 외판용으로 광범위하게 적용.",
+        mechanical: {
+          tensile: "270 MPa 이상",
+          yield: "140 - 240 MPa",
+          elongation: "38% 이상 (A50)",
+          nvalue: "0.22 (우수한 성형성)"
+        },
+        designCoeffs: {
+          trimCoeff: 1.0,
+          holeCoeff: 1.0,
+          bendCoeff: 0.8,
+          springback: "0.5° - 1.5° 수준 (스프링백이 매우 적어 치수 복원력이 우수)"
+        },
+        lessons: [
+          "[드로잉 파손] 연신율이 매우 우수하나 과도한 비드(Bead) 가압력 인가 시 박리 및 파단 현상이 생기므로 클리어런스 110% 권장.",
+          "[Burr 제어] 클리어런스를 재 두께의 8% 이하로 과도하게 축소할 경우 드로잉 공정 날 마모가 촉진되므로 표준 10% 준수."
+        ],
+        notes: [
+          "성형 가공에 가장 표준이 되는 범용 강판으로 가이드 값의 예외 설계가 거의 불필요합니다.",
+          "방청 처리가 되어 있지 않으므로 프레스 타발 후 장기 보관 시 방청유 도포 처리를 필수 검토해야 합니다.",
+          "Bending R은 최소 t값 미만(예: 0.5t)으로 설계되어도 크랙 위험성이 낮으나 노화가 많이 진행된 노후 스틸은 크랙 경향 발생 가능."
+        ]
+      },
+      {
+        id: "m_sphc",
+        name: "SPHC",
+        category: "열연",
+        desc: "일반 열간 압연 연질 강판, 섀시 부품 및 후판 브래킷 성형용으로 널리 사용.",
+        mechanical: {
+          tensile: "270 MPa 이상",
+          yield: "150 - 260 MPa",
+          elongation: "30% 이상",
+          nvalue: "0.18"
+        },
+        designCoeffs: {
+          trimCoeff: 1.2,
+          holeCoeff: 1.2,
+          bendCoeff: 1.0,
+          springback: "1.0° - 2.0° 내외 (두께 변동에 따른 탄성 회복 최소)"
+        },
+        lessons: [
+          "[스케일 유입] 열연 강판 표면의 스케일(Oxide Scale)이 탈락하여 프레스 다이 내부에 적층되어 피가공물 압흔 불량을 지속적으로 발생시킴 -> 금형 청소 주기 짧게 설정 필요.",
+          "[버 전단면] 냉연재 대비 전단단면의 Burr가 잘 발생하는 특성이 있어 트림 다이 칼날 수명 예측 관리가 절실함."
+        ],
+        notes: [
+          "표면 스케일로 인해 금형 손상율이 냉연 대비 높으므로 세라믹 코팅 등의 내마모성 코팅(CrN 등)을 금형에 적용하는 것이 유리합니다.",
+          "최소 Trim 간격은 열연재 고유 거칠기가 있으므로 안전 측인 1.2t 이상을 추천합니다."
+        ]
+      },
+      {
+        id: "m_dp980",
+        name: "DP980",
+        category: "고장력강",
+        desc: "초고장력 이중상 복합조직강 (Dual Phase), 매우 높은 인장 강도를 보유하여 주로 사이드 멤버 등 차체 충돌 흡수 부재용에 필수적으로 활용.",
+        mechanical: {
+          tensile: "980 MPa 이상",
+          yield: "550 - 730 MPa",
+          elongation: "12% 이상 (A50)",
+          nvalue: "0.14"
+        },
+        designCoeffs: {
+          trimCoeff: 1.8,
+          holeCoeff: 2.0,
+          bendCoeff: 3.0,
+          springback: "8.0° - 11.5° 편차 발생 우려 (심각한 탄성 복원 현상 존재)"
+        },
+        lessons: [
+          "[에지 크랙] 전단 단면에서 구멍 확장성(HER) 저하로 가변 플랜징 및 드로잉 부에서 크랙 다발. 전단 공정의 클리어런스를 12~15%로 확장 설계하여 전단면 파단부 비율 극대화 조치.",
+          "[스프링백 뒤틀림] 고질적인 벽 휨(Wall Curl) 및 비틀림 발생. 대안으로 제품부 비틀림 상쇄용 스텝 굽힘(Over-Bending) 및 리브(Rib) 보강 필수 설계."
+        ],
+        notes: [
+          "매우 강한 강도로 인해 전단 타발 시 가공 부하가 극심합니다. 펀치 핀은 SKD11 이상의 고합금 공구강을 넘어서 분말하이스강(CPM) + CVD 코팅 처리가 적용되어야 양산 안정성을 기할 수 있습니다.",
+          "최소 Bending R은 소재 압연 방향과 성형 라인이 평행일 시 대단히 취약하므로, 성형 레이아웃 배치 시 경사(45도 등) 배열을 설계에 가미해야 합니다."
+        ]
+      },
+      {
+        id: "m_sgcc",
+        name: "SGCC",
+        category: "냉연/도금",
+        desc: "용융아연도금 강판 (GI), 뛰어난 내식성을 갖추어 외관 부품 및 습기 노출이 빈번한 서브 프레임 등에 채택.",
+        mechanical: {
+          tensile: "270 - 350 MPa",
+          yield: "140 - 240 MPa",
+          elongation: "35% 이상",
+          nvalue: "0.20"
+        },
+        designCoeffs: {
+          trimCoeff: 1.1,
+          holeCoeff: 1.0,
+          bendCoeff: 1.0,
+          springback: "1.0° - 2.2° 발생"
+        },
+        lessons: [
+          "[아연 분말 흡착] 가공 도중 표면의 아연 도금층이 금형 성형 R부나 드로잉 벽면에 밀착, 탈락되어 아연 가루가 축적됨 -> 가공유 분사량 증대 및 벤딩 다이 마찰 계수 최적화 적용.",
+          "[제품 스크래치] 이물질 누적으로 인한 표면 손상(Galling) 우려. 성형 펀치부를 경면 크롬 도금 처리하여 마찰 거칠기 확보."
+        ],
+        notes: [
+          "용융 도금층의 균열 및 박리를 예방하기 위해 성형 가공 펀치 가이드의 최소 R은 아연층 손상율을 고려하여 약간 여유 있게 설계하는 것을 추천합니다.",
+          "환경 조건에 대응하는 소재인 만큼 금형 부식도 예방하기 위한 방청 및 방오 그리스 선정 고려 필요."
+        ]
+      },
+      {
+        id: "m_hpf1500",
+        name: "HPF1500 (핫스탬핑)",
+        category: "고장력강",
+        desc: "핫스탬핑 열간성형강, 원재료 상태에서는 가공이 원활하지만 가열(900도 이상) 후 금형 내에서 수냉 담금질을 거쳐 1.5GPa급 초고강도를 확보하는 공법의 특수강.",
+        mechanical: {
+          tensile: "1500 MPa 이상 (성형 후)",
+          yield: "950 - 1200 MPa (성형 후)",
+          elongation: "6% - 8% (성형 후 급감)",
+          nvalue: "N/A (열간 가공)"
+        },
+        designCoeffs: {
+          trimCoeff: 2.5,
+          holeCoeff: 3.0,
+          bendCoeff: 4.5,
+          springback: "0.2° 미만 (급냉 담금질 성형으로 치수 정밀도는 초정밀하나 후가공 불가)"
+        },
+        lessons: [
+          "[후가공 크랙] 상온 상태에서 프레스 타발이 불가함. 따라서 블랭킹 성형 및 트리밍은 금형 전단이 불가능하여 양산 시 '레이저 커팅' 공정으로 분할하여 설계를 기획해야 함.",
+          "[금형 냉각 채널 설계] 금형 내부의 수냉 냉각 수로 설계 레이아웃에 균열이 생기거나 유량이 부족하면 경도 미달 현상 발생 -> 전산 유체 열해석(CAE) 필수 검토."
+        ],
+        notes: [
+          "일반 냉간 금형 설계 방식과는 개념이 완전히 상이합니다. 트리밍 공정을 레이저가 대체하므로 금형에서는 성형과 동시에 냉각(Chilling)을 최적으로 유도할 수 있도록 냉각 도파관(Cooling Channel) 레이아웃에 기술을 집중해야 합니다."
+        ]
+      }
+    ];
+
+    // State Variables
+    let materials = [];
+    let currentMaterial = null;
+    let selectedThickness = 1.2;
+    let currentCategory = "ALL";
+    let excelParsedData = []; // Temporary holding list for Excel import
+
+    // Notification helper (Non-blocking Custom Toast)
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      
+      const colors = {
+        success: "bg-emerald-950/90 border-emerald-500 text-emerald-300",
+        error: "bg-rose-950/90 border-rose-500 text-rose-300",
+        info: "bg-blue-950/90 border-blue-500 text-blue-300"
+      };
+      
+      const icons = {
+        success: "fa-circle-check",
+        error: "fa-circle-exclamation",
+        info: "fa-circle-info"
+      };
+
+      toast.className = `p-4 rounded-xl border flex items-center gap-3 shadow-2xl transition duration-300 ease-out transform translate-y-2 opacity-0 pointer-events-auto max-w-sm ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <i class="fa-solid ${icons[type]} text-lg"></i>
+        <div class="text-xs font-semibold leading-snug">${message}</div>
+      `;
+
+      container.appendChild(toast);
+      
+      // Animate entry
+      setTimeout(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      }, 50);
+
+      // Dismiss after 4s
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y--2");
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 4000);
+    }
+
+    // NEW & IMPROVED: Auto-load files on initialization with proper CSV Line Ending Cleansing
+    async function loadUploadedCsvs() {
+      let loadedSteel = false;
+      let loadedAlu = false;
+      
+      // Try unencoded and encoded fetches to be fully robust
+      try {
+        const steelRes = await fetch('Material_List_Rev01_260608.xlsx - Steel.csv');
+        if (steelRes.ok) {
+          const steelText = await steelRes.text();
+          parseAndMergeCsv(steelText, 'Steel');
+          loadedSteel = true;
+          updateStatusIndicator('statusSteel', true, 'Steel 연동완료');
+        }
+      } catch (e) {
+        console.warn("Steel CSV auto-load bypassed:", e);
+      }
+      
+      try {
+        const aluRes = await fetch('Material_List_Rev01_260608.xlsx - Aluminum.csv');
+        if (aluRes.ok) {
+          const aluText = await aluRes.text();
+          parseAndMergeCsv(aluText, 'Aluminum');
+          loadedAlu = true;
+          updateStatusIndicator('statusAlu', true, 'Aluminum 연동완료');
+        }
+      } catch (e) {
+        console.warn("Aluminum CSV auto-load bypassed:", e);
+      }
+
+      if (loadedSteel || loadedAlu) {
+        saveDatabase();
+        renderMaterialList();
+        renderMaterialDetails();
+        
+        let msg = "소재 데이터가 성공적으로 분석 및 업데이트되었습니다.";
+        showToast(msg, "success");
+      }
+    }
+
+    // Update Status Indicator visually
+    function updateStatusIndicator(id, success, label) {
+      const elem = document.getElementById(id);
+      if (!elem) return;
+      if (success) {
+        elem.className = "flex items-center gap-1 text-emerald-400";
+        elem.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> ${label}`;
+      } else {
+        elem.className = "flex items-center gap-1 text-rose-400";
+        elem.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> ${label}`;
+      }
+    }
+
+    // Robust CSV parser line-by-line with \r removal to prevent breaking headers
+    function parseAndMergeCsv(csvText, type) {
+      // CLEANSE: Essential to remove carriage returns to prevent string mismatch on headers/fields
+      const lines = csvText.replace(/\r/g, "").split('\n');
+      if (lines.length < 2) return;
+      
+      // Find header line index dynamically
+      let headerIndex = -1;
+      for (let i = 0; i < lines.length; i++) {
+        const lLow = lines[i].toLowerCase();
+        if (lLow.includes('spec') && (lLow.includes('tensile') || lLow.includes('strength'))) {
+          headerIndex = i;
+          break;
+        }
+      }
+      
+      if (headerIndex === -1) headerIndex = 0;
+      
+      const headers = parseCsvLine(lines[headerIndex]);
+      const specIdx = headers.findIndex(h => h.toUpperCase().includes('SPEC'));
+      const tsIdx = headers.findIndex(h => h.toUpperCase().includes('TENSILE') || h.toUpperCase().includes('TS'));
+      const yMinIdx = headers.findIndex(h => h.toUpperCase().includes('YIELD MIN') || h.toUpperCase().includes('Y_MIN') || h.toUpperCase().includes('YIELD_MIN'));
+      const yMaxIdx = headers.findIndex(h => h.toUpperCase().includes('YIELD MAX') || h.toUpperCase().includes('Y_MAX') || h.toUpperCase().includes('YIELD_MAX'));
+      const elIdx = headers.findIndex(h => h.toUpperCase().includes('EL'));
+      const nValueIdx = headers.findIndex(h => h.toUpperCase().includes('N-VALUE') || h.toUpperCase().includes('가공경화지수') || h.toUpperCase().includes('N_VALUE'));
+      
+      let count = 0;
+      for (let i = headerIndex + 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const columns = parseCsvLine(line);
+        if (columns.length === 0 || !columns[specIdx]) continue;
+        
+        const specName = columns[specIdx].trim();
+        if (specName.toLowerCase() === 'spec' || specName.includes('예시') || specName.startsWith('SPEC')) continue;
+        
+        const tensile = columns[tsIdx] ? columns[tsIdx].trim() : '';
+        const yMin = columns[yMinIdx] ? columns[yMinIdx].trim() : '';
+        const yMax = columns[yMaxIdx] ? columns[yMaxIdx].trim() : '';
+        const el = columns[elIdx] ? columns[elIdx].trim() : '';
+        const nval = columns[nValueIdx] ? columns[nValueIdx].trim() : '';
+        
+        // Define Category
+        let category = '특수재/기타';
+        if (type === 'Aluminum' || specName.startsWith('A1') || specName.startsWith('A2') || specName.startsWith('A3') || specName.startsWith('A4')) {
+          category = '알루미늄';
+        } else {
+          const tsNum = parseInt(tensile, 10) || 0;
+          if (specName.includes('DP') || specName.includes('CP') || tsNum >= 590) {
+            category = '고장력강';
+          } else if (specName.includes('HR') || specName.includes('SPFH') || specName.includes('SPHC')) {
+            category = '열연';
+          } else if (specName.includes('CR') || specName.includes('SPCC') || specName.includes('SGCC') || tsNum < 340) {
+            category = '냉연/도금';
+          }
+        }
+        
+        // Set basic standard coefficients based on Category
+        let trimCoeff = 1.2;
+        let holeCoeff = 1.5;
+        let bendCoeff = 1.5;
+        let springback = "1.5° ~ 3.0° 수준";
+        
+        const tsNum = parseInt(tensile, 10) || 0;
+        if (category === '고장력강') {
+          if (tsNum >= 980) {
+            trimCoeff = 1.8; holeCoeff = 2.0; bendCoeff = 3.0;
+            springback = "8.0° ~ 11.5° (강력한 탄성 복원으로 성형 캠 및 보정 필수)";
+          } else if (tsNum >= 780) {
+            trimCoeff = 1.6; holeCoeff = 1.8; bendCoeff = 2.5;
+            springback = "5.5° ~ 8.0° (스프링백 및 벽 휨 대책 필요)";
+          } else {
+            trimCoeff = 1.4; holeCoeff = 1.6; bendCoeff = 2.0;
+            springback = "3.5° ~ 5.5° (오버벤딩 및 보정 타겟)";
+          }
+        } else if (category === '알루미늄') {
+          trimCoeff = 1.2; holeCoeff = 1.5; bendCoeff = 2.0;
+          springback = "2.0° ~ 4.5° (국부 균열 및 스프링백 주의)";
+        } else if (category === '열연') {
+          trimCoeff = 1.2; holeCoeff = 1.2; bendCoeff = 1.0;
+          springback = "1.0° ~ 2.0° 수준 (탄성 복원이 안정적)";
+        } else {
+          trimCoeff = 1.0; holeCoeff = 1.0; bendCoeff = 0.8;
+          springback = "0.5° ~ 1.5° 수준 (치수 복원성 매우 우수)";
+        }
+        
+        const id = "m_csv_" + type.toLowerCase() + "_" + specName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        
+        // Yield Text formatting
+        let yieldText = '';
+        if (yMin && yMax) {
+          yieldText = `${yMin} - ${yMax} MPa`;
+        } else if (yMin) {
+          yieldText = `${yMin} MPa 이상`;
+        } else {
+          yieldText = 'N/A';
+        }
+        
+        const matchIdx = materials.findIndex(m => m.name.toUpperCase() === specName.toUpperCase());
+        
+        const parsedItem = {
+          id: matchIdx !== -1 ? materials[matchIdx].id : id,
+          name: specName,
+          category,
+          desc: `${type === 'Aluminum' ? '알루미늄 규격' : '표준 엑셀 연동'} - 규격재 (${tensile ? tensile + ' MPa급' : '물성 가이드 참조'})`,
+          mechanical: {
+            tensile: tensile ? `${tensile} MPa` : 'N/A',
+            yield: yieldText,
+            elongation: el ? `${el}%` : 'N/A',
+            nvalue: nval || 'N/A'
+          },
+          designCoeffs: { trimCoeff, holeCoeff, bendCoeff, springback },
+          lessons: category === '알루미늄'
+            ? [
+                "[에지 균열] 절곡 외측부에 미세 오렌지필(Orange Peel) 및 균열 다발 발생 우려 -> 최소 Bending R 2.0t 적용 조치.",
+                "[Al 전착 가루] 알루미늄 판재 성형 중 다이에 미세 분말이 흡착(Al Pickup)되어 제품 표면 압흔 불량 빈발 -> 공정 펀치 표면에 DLC 코팅 및 전용유 공급."
+              ]
+            : category === '고장력강'
+            ? [
+                "[스프링백 불량] 고장력 탄성 특성으로 인해 벽 휨(Curl) 및 절곡 부 각도 복원 빈발 -> 다단 굽힘 가이드 및 오버벤딩 각도 타겟 설계.",
+                "[전단 펀치 파손] 전단 타발 시 가공 부하가 극심합니다. 날 치핑 조심 -> 고장력강 특화 CPM 분말하이스 강재 적용 필요."
+              ]
+            : [
+                "[Burr 품질 관리] 타발 가공부 Clearance가 과소하면 날 마모 촉진 -> 재 두께 t의 표준 10% Clearance 관리 준수."
+              ],
+          notes: category === '알루미늄'
+            ? [
+                "알루미늄재는 프레스 가공 도중 스크래치 발현이 매우 잦으므로, 모든 성형 다이 R부의 표면 거칠기 정밀 사상 관리가 관건입니다.",
+                "밀도가 낮아 철재 대비 타발 가공력은 현저히 줄어들지만 탄성 특성이 달라 스프링백 보정 값을 사전 적용하십시오."
+              ]
+            : [
+                "표준 성형 가공 룰을 적용받는 냉연 표준재입니다.",
+                "가공 전 소재 성적서(Mill Sheet)를 체크하여 인장 시험 물성치의 상하한 한계 범위에 속하는지 필히 모니터링하십시오."
+              ]
+        };
+        
+        if (matchIdx !== -1) {
+          materials[matchIdx] = {
+            ...materials[matchIdx],
+            ...parsedItem,
+            id: materials[matchIdx].id
+          };
+        } else {
+          materials.push(parsedItem);
+        }
+        count++;
+      }
+      console.log(`Successfully merged ${count} materials from ${type} CSV`);
+    }
+
+    function parseCsvLine(text) {
+      let p = '', r = [];
+      let q = false;
+      for (let i = 0; i < text.length; i++) {
+        let c = text[i];
+        if (c === '"') {
+          q = !q;
+        } else if (c === ',' && !q) {
+          r.push(p);
+          p = '';
+        } else {
+          p += c;
+        }
+      }
+      r.push(p);
+      return r;
+    }
+
+    // Dom Selection
+    const searchInput = document.getElementById("searchInput");
+    const categoryTabs = document.getElementById("categoryTabs");
+    const materialList = document.getElementById("materialList");
+    const thicknessSlider = document.getElementById("thicknessSlider");
+    const thicknessVal = document.getElementById("thicknessVal");
+    const thicknessPresets = document.getElementById("thicknessPresets");
+
+    // Details elements
+    const currentMaterialName = document.getElementById("currentMaterialName");
+    const currentCategoryBadge = document.getElementById("currentCategoryBadge");
+    const currentStandardBadge = document.getElementById("currentStandardBadge");
+    const currentThicknessLabel = document.getElementById("currentThicknessLabel");
+    const currentMaterialDesc = document.getElementById("currentMaterialDesc");
+    const guideThicknessLabel = document.getElementById("guideThicknessLabel");
+
+    // Details 1: Mechanical
+    const propTensile = document.getElementById("propTensile");
+    const propYield = document.getElementById("propYield");
+    const propElongation = document.getElementById("propElongation");
+    const propNValue = document.getElementById("propNValue");
+
+    // Details 2: Design
+    const designTrim = document.getElementById("designTrim");
+    const designTrimFormula = document.getElementById("designTrimFormula");
+    const designHole = document.getElementById("designHole");
+    const designHoleFormula = document.getElementById("designHoleFormula");
+    const designBend = document.getElementById("designBend");
+    const designBendFormula = document.getElementById("designBendFormula");
+    const designSpringback = document.getElementById("designSpringback");
+
+    // UPGRADED: Calculator Elements
+    const inputShearLength = document.getElementById("inputShearLength");
+    const calcShearTs = document.getElementById("calcShearTs");
+    const calcShearStrength = document.getElementById("calcShearStrength");
+    const calcShearThickness = document.getElementById("calcShearThickness");
+    const resultShearForce = document.getElementById("resultShearForce");
+    const resultShearSafetyVal = document.getElementById("resultShearSafetyVal");
+
+    const inputFormingLength = document.getElementById("inputFormingLength");
+    const inputFormingType = document.getElementById("inputFormingType");
+    const inputFormingDieWidth = document.getElementById("inputFormingDieWidth");
+    const inputFormingDieWidthMm = document.getElementById("inputFormingDieWidthMm");
+    const resultFormingForce = document.getElementById("resultFormingForce");
+    const resultFormingSafetyVal = document.getElementById("resultFormingSafetyVal");
+
+    // Details 3 & 4
+    const lessonsContainer = document.getElementById("lessonsContainer");
+    const specialNotesContainer = document.getElementById("specialNotesContainer");
+
+    // Modals & Action Btns
+    const addMaterialBtn = document.getElementById("addMaterialBtn");
+    const editCurrentMaterialBtn = document.getElementById("editCurrentMaterialBtn");
+    const deleteMaterialBtn = document.getElementById("deleteMaterialBtn");
+    const materialModal = document.getElementById("materialModal");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const cancelModalBtn = document.getElementById("cancelModalBtn");
+    const materialForm = document.getElementById("materialForm");
+    
+    const exportDbBtn = document.getElementById("exportDbBtn");
+    const importDbBtn = document.getElementById("importDbBtn");
+    const importFile = document.getElementById("importFile");
+
+    // Excel Specific Modal Elements
+    const excelBatchBtn = document.getElementById("excelBatchBtn");
+    const excelModal = document.getElementById("excelModal");
+    const closeExcelModalBtn = document.getElementById("closeExcelModalBtn");
+    const cancelExcelModalBtn = document.getElementById("cancelExcelModalBtn");
+    const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
+    const dropZone = document.getElementById("dropZone");
+    const excelFileInput = document.getElementById("excelFileInput");
+    const excelPreviewContainer = document.getElementById("excelPreviewContainer");
+    const excelPreviewBody = document.getElementById("excelPreviewBody");
+    const excelImportCount = document.getElementById("excelImportCount");
+    const submitExcelBtn = document.getElementById("submitExcelBtn");
+
+    // UPGRADED: Manual File Input Selectors for CSVs
+    const btnManualSteel = document.getElementById("btnManualSteel");
+    const btnManualAlu = document.getElementById("btnManualAlu");
+    const fileManualSteel = document.getElementById("fileManualSteel");
+    const fileManualAlu = document.getElementById("fileManualAlu");
+
+    // Modal Form inputs
+    const editMaterialId = document.getElementById("editMaterialId");
+    const formName = document.getElementById("formName");
+    const formCategory = document.getElementById("formCategory");
+    const formDesc = document.getElementById("formDesc");
+    const formTensile = document.getElementById("formTensile");
+    const formYield = document.getElementById("formYield");
+    const formElongation = document.getElementById("formElongation");
+    const formNValue = document.getElementById("formNValue");
+    const formTrimCoeff = document.getElementById("formTrimCoeff");
+    const formHoleCoeff = document.getElementById("formHoleCoeff");
+    const formBendCoeff = document.getElementById("formBendCoeff");
+    const formSpringback = document.getElementById("formSpringback");
+    const formLessons = document.getElementById("formLessons");
+    const formNotes = document.getElementById("formNotes");
+
+    // Render Material List in Sidebar
+    function renderMaterialList() {
+      const query = searchInput.value.toLowerCase().trim();
+      materialList.innerHTML = "";
+
+      const filtered = materials.filter(m => {
+        const matchesSearch = m.name.toLowerCase().includes(query) || m.desc.toLowerCase().includes(query);
+        const matchesCategory = (currentCategory === "ALL" || m.category === currentCategory);
+        return matchesSearch && matchesCategory;
+      });
+
+      if (filtered.length === 0) {
+        materialList.innerHTML = `<div class="text-xs text-slate-500 py-6 text-center">검색 결과에 맞는 원소재가 없습니다.</div>`;
+        return;
+      }
+
+      filtered.forEach(m => {
+        const isSelected = currentMaterial && m.id === currentMaterial.id;
+        const item = document.createElement("button");
+        item.className = `w-full text-left p-3 rounded-lg border text-sm transition flex items-center justify-between ${
+          isSelected 
+            ? "bg-blue-600/10 border-blue-500 text-blue-200" 
+            : "bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300"
+        }`;
+        
+        item.innerHTML = `
+          <div class="truncate pr-2">
+            <div class="font-bold flex items-center gap-1.5">
+              ${m.name} 
+              <span class="text-[10px] font-normal text-slate-500 bg-slate-800 px-1.5 py-0.2 rounded">${m.category}</span>
+            </div>
+            <div class="text-xs text-slate-400 truncate mt-0.5">${m.desc}</div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs ${isSelected ? 'text-blue-400' : 'text-slate-600'}"></i>
+        `;
+
+        item.addEventListener("click", () => {
+          currentMaterial = m;
+          renderMaterialList();
+          renderMaterialDetails();
+        });
+
+        materialList.appendChild(item);
+      });
+    }
+
+    // Recalculate forces
+    function recalculateForces() {
+      if (!currentMaterial) return;
+
+      const t = selectedThickness;
+      const tensileStr = parseNumberFromString(currentMaterial.mechanical?.tensile, 300);
+      
+      // Update UI displays in calculator
+      calcShearTs.textContent = `${tensileStr} MPa`;
+      calcShearThickness.textContent = `${t.toFixed(1)} mm`;
+
+      // 1. Shearing Force calculation
+      const shearLength = parseFloat(inputShearLength.value) || 0;
+      const shearStrength = tensileStr * 0.8;
+      calcShearStrength.textContent = `${shearStrength.toFixed(0)} MPa`;
+
+      const sForce = (shearLength * t * shearStrength) / 9806.65; // Precise gravity divisor
+      resultShearForce.textContent = sForce.toFixed(1);
+      resultShearSafetyVal.textContent = (sForce * 1.3).toFixed(1); // 30% safety margin
+
+      // 2. Forming Force calculation
+      const formingLength = parseFloat(inputFormingLength.value) || 0;
+      const formingCoeff = parseFloat(inputFormingType.value) || 1.33;
+      const dieWidthFactor = parseFloat(inputFormingDieWidth.value) || 8;
+      const dieWidthMm = t * dieWidthFactor;
+
+      inputFormingDieWidthMm.value = dieWidthMm.toFixed(1);
+
+      let fForce = 0;
+      if (dieWidthMm > 0) {
+        fForce = (formingCoeff * formingLength * Math.pow(t, 2) * tensileStr) / (dieWidthMm * 9806.65);
+      }
+
+      resultFormingForce.textContent = fForce.toFixed(1);
+      resultFormingSafetyVal.textContent = (fForce * 1.3).toFixed(1); // 30% safety margin
+    }
+
+    // Render Detailed Specifications & Calculations
+    function renderMaterialDetails() {
+      if (!currentMaterial) {
+        return;
+      }
+
+      // Title & General
+      currentMaterialName.textContent = currentMaterial.name;
+      currentThicknessLabel.textContent = `(t = ${selectedThickness.toFixed(1)}mm 적용 중)`;
+      guideThicknessLabel.textContent = selectedThickness.toFixed(1);
+      currentMaterialDesc.textContent = currentMaterial.desc;
+      currentCategoryBadge.textContent = currentMaterial.category;
+
+      // Classify standard Badge
+      if (currentMaterial.id.startsWith("m_") && !currentMaterial.id.startsWith("m_user_") && !currentMaterial.id.startsWith("m_csv_")) {
+        currentStandardBadge.textContent = "표준 내장 사양";
+      } else if (currentMaterial.id.startsWith("m_csv_")) {
+        currentStandardBadge.textContent = "엑셀 연동 규격 사양";
+      } else {
+        currentStandardBadge.textContent = "사용자 등록 사양";
+      }
+
+      // Category styling
+      const categoryColorMap = {
+        "냉연/도금": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        "고장력강": "bg-rose-500/10 text-rose-400 border-rose-500/20",
+        "열연": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        "알루미늄": "bg-teal-500/10 text-teal-400 border-teal-500/20",
+        "특수재/기타": "bg-purple-500/10 text-purple-400 border-purple-500/20",
+      };
+      currentCategoryBadge.className = `px-2.5 py-1 text-xs font-semibold rounded border uppercase ${categoryColorMap[currentMaterial.category] || categoryColorMap["특수재/기타"]}`;
+
+      // 1. Mechanical Properties
+      propTensile.textContent = currentMaterial.mechanical?.tensile || "N/A";
+      propYield.textContent = currentMaterial.mechanical?.yield || "N/A";
+      propElongation.textContent = currentMaterial.mechanical?.elongation || "N/A";
+      propNValue.textContent = currentMaterial.mechanical?.nvalue || "N/A";
+
+      // 2. Guidelines (Formula Applied Based on Thickness)
+      const t = selectedThickness;
+      const tc = parseFloat(currentMaterial.designCoeffs?.trimCoeff || 1.2);
+      const hc = parseFloat(currentMaterial.designCoeffs?.holeCoeff || 1.5);
+      const bc = parseFloat(currentMaterial.designCoeffs?.bendCoeff || 1.2);
+
+      const computedTrim = (t * tc).toFixed(2);
+      const computedHole = (t * hc).toFixed(2);
+      const computedBend = (t * bc).toFixed(2);
+
+      designTrim.textContent = computedTrim;
+      designTrimFormula.textContent = `기준 배율: ${tc.toFixed(1)}t`;
+
+      designHole.textContent = computedHole;
+      designHoleFormula.textContent = `기준 배율: ${hc.toFixed(1)}t`;
+
+      designBend.textContent = computedBend;
+      designBendFormula.textContent = `기준 배율: ${bc.toFixed(1)}t`;
+
+      designSpringback.textContent = currentMaterial.designCoeffs?.springback || "해당 없음";
+
+      // Trigger Force recalculation using selected material properties
+      recalculateForces();
+
+      // 3. Lessons Learned
+      lessonsContainer.innerHTML = "";
+      if (currentMaterial.lessons && currentMaterial.lessons.length > 0) {
+        currentMaterial.lessons.forEach(lesson => {
+          let type = "일반";
+          let text = lesson;
+          
+          if (lesson.includes("]")) {
+            const split = lesson.split("]");
+            type = split[0].replace("[", "");
+            text = split.slice(1).join("]");
+          }
+
+          const item = document.createElement("div");
+          item.className = "p-3 bg-slate-900/60 rounded-lg border border-slate-800 flex items-start gap-2.5";
+          item.innerHTML = `
+            <div class="mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">${type}</div>
+            <div class="text-xs text-slate-300 leading-relaxed">${text}</div>
+          `;
+          lessonsContainer.appendChild(item);
+        });
+      } else {
+        lessonsContainer.innerHTML = `<div class="text-xs text-slate-500 p-3 text-center">등록된 과거 트러블 및 교훈(Lessons Learned) 사례가 없습니다.</div>`;
+      }
+
+      // 4. Special Considerations
+      specialNotesContainer.innerHTML = "";
+      if (currentMaterial.notes && currentMaterial.notes.length > 0) {
+        const list = document.createElement("ul");
+        list.className = "list-disc pl-5 space-y-2 text-xs text-slate-300";
+        currentMaterial.notes.forEach(note => {
+          const formattedNote = note.replace(/^[-\*\s]+/, ""); // Remove bullets if any
+          const li = document.createElement("li");
+          li.textContent = formattedNote;
+          list.appendChild(li);
+        });
+        specialNotesContainer.appendChild(list);
+      } else {
+        specialNotesContainer.innerHTML = `<div class="text-xs text-slate-500 p-3 text-center">등록된 원소재 가공 특이사항이 없습니다.</div>`;
+      }
+    }
+
+    // Set Category Filters Active State
+    categoryTabs.addEventListener("click", (e) => {
+      const button = e.target.closest("button");
+      if (!button) return;
+
+      Array.from(categoryTabs.children).forEach(btn => {
+        btn.className = "px-3 py-1.5 text-slate-400 hover:text-slate-200 font-medium whitespace-nowrap focus:outline-none";
+      });
+
+      button.className = "px-3 py-1.5 text-blue-400 border-b-2 border-blue-500 font-medium whitespace-nowrap focus:outline-none";
+      currentCategory = button.getAttribute("data-category");
+      renderMaterialList();
+    });
+
+    // Thickness Slider Input Handler
+    thicknessSlider.addEventListener("input", (e) => {
+      selectedThickness = parseFloat(e.target.value);
+      thicknessVal.textContent = `${selectedThickness.toFixed(1)} mm`;
+      
+      // Update custom styles inside presets
+      Array.from(thicknessPresets.children).forEach(btn => {
+        const presetVal = parseFloat(btn.getAttribute("data-val"));
+        if (presetVal === selectedThickness) {
+          btn.className = "py-1 text-xs bg-teal-500/10 border border-teal-500/30 rounded text-teal-400 transition font-semibold";
+        } else {
+          btn.className = "py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition";
+        }
+      });
+
+      renderMaterialDetails();
+    });
+
+    // Preset Clicks
+    thicknessPresets.addEventListener("click", (e) => {
+      const button = e.target.closest("button");
+      if (!button) return;
+
+      const val = parseFloat(button.getAttribute("data-val"));
+      thicknessSlider.value = val;
+      selectedThickness = val;
+      thicknessVal.textContent = `${val.toFixed(1)} mm`;
+
+      Array.from(thicknessPresets.children).forEach(btn => {
+        btn.className = "py-1 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded text-slate-300 transition";
+      });
+      button.className = "py-1 text-xs bg-teal-500/10 border border-teal-500/30 rounded text-teal-400 transition font-semibold";
+
+      renderMaterialDetails();
+    });
+
+    // Calculator Event Listeners for Live Recalculations
+    [inputShearLength, inputFormingLength, inputFormingType, inputFormingDieWidth].forEach(elem => {
+      elem.addEventListener("input", recalculateForces);
+      elem.addEventListener("change", recalculateForces);
+    });
+
+    // Search input handler
+    searchInput.addEventListener("input", renderMaterialList);
+
+    // Open Modal for Editing/Creation
+    function openModal(materialToEdit = null) {
+      materialModal.classList.remove("hidden");
+      
+      if (materialToEdit) {
+        document.getElementById("modalTitle").textContent = `${materialToEdit.name} 강종 사양서 편집`;
+        editMaterialId.value = materialToEdit.id;
+        formName.value = materialToEdit.name;
+        formCategory.value = materialToEdit.category;
+        formDesc.value = materialToEdit.desc;
+        formTensile.value = materialToEdit.mechanical?.tensile || "";
+        formYield.value = materialToEdit.mechanical?.yield || "";
+        formElongation.value = materialToEdit.mechanical?.elongation || "";
+        formNValue.value = materialToEdit.mechanical?.nvalue || "";
+        formTrimCoeff.value = materialToEdit.designCoeffs?.trimCoeff || 1.0;
+        formHoleCoeff.value = materialToEdit.designCoeffs?.holeCoeff || 1.0;
+        formBendCoeff.value = materialToEdit.designCoeffs?.bendCoeff || 1.0;
+        formSpringback.value = materialToEdit.designCoeffs?.springback || "";
+        
+        formLessons.value = (materialToEdit.lessons || []).join("\n");
+        formNotes.value = (materialToEdit.notes || []).join("\n");
+
+        deleteMaterialBtn.classList.remove("hidden");
+      } else {
+        document.getElementById("modalTitle").textContent = "신규 원소재 강종 사양 등록";
+        editMaterialId.value = "";
+        materialForm.reset();
+        
+        formTrimCoeff.value = 1.0;
+        formHoleCoeff.value = 1.0;
+        formBendCoeff.value = 1.0;
+        
+        deleteMaterialBtn.classList.add("hidden");
+      }
+    }
+
+    function closeModal() {
+      materialModal.classList.add("hidden");
+      materialForm.reset();
+    }
+
+    addMaterialBtn.addEventListener("click", () => openModal(null));
+    editCurrentMaterialBtn.addEventListener("click", () => openModal(currentMaterial));
+    closeModalBtn.addEventListener("click", closeModal);
+    cancelModalBtn.addEventListener("click", closeModal);
+
+    // Form Submission
+    materialForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const id = editMaterialId.value;
+      const name = formName.value.trim();
+      const category = formCategory.value;
+      const desc = formDesc.value.trim();
+      
+      const mechanical = {
+        tensile: formTensile.value.trim(),
+        yield: formYield.value.trim(),
+        elongation: formElongation.value.trim(),
+        nvalue: formNValue.value.trim()
+      };
+
+      const designCoeffs = {
+        trimCoeff: parseFloat(formTrimCoeff.value) || 1.0,
+        holeCoeff: parseFloat(formHoleCoeff.value) || 1.0,
+        bendCoeff: parseFloat(formBendCoeff.value) || 1.0,
+        springback: formSpringback.value.trim()
+      };
+
+      const lessons = formLessons.value.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      const notes = formNotes.value.split("\n").map(n => n.trim()).filter(n => n.length > 0);
+
+      if (id) {
+        // Edit existing
+        const index = materials.findIndex(m => m.id === id);
+        if (index !== -1) {
+          materials[index] = { ...materials[index], name, category, desc, mechanical, designCoeffs, lessons, notes };
+          currentMaterial = materials[index];
+        }
+        showToast(`'${name}' 강종 정보가 업데이트되었습니다.`, "success");
+      } else {
+        // Create new
+        const newId = "m_user_" + Date.now();
+        const newMaterial = { id: newId, name, category, desc, mechanical, designCoeffs, lessons, notes };
+        materials.push(newMaterial);
+        currentMaterial = newMaterial;
+        showToast(`새로운 강종 '${name}'이 등록되었습니다.`, "success");
+      }
+
+      saveDatabase();
+      closeModal();
+      renderMaterialList();
+      renderMaterialDetails();
+    });
+
+    // Delete Material Action
+    deleteMaterialBtn.addEventListener("click", () => {
+      const id = editMaterialId.value;
+      if (!id) return;
+
+      const confirmed = confirm(`정말로 '${formName.value}' 원소재 사양을 라이브러리에서 제거하시겠습니까?`);
+      if (confirmed) {
+        materials = materials.filter(m => m.id !== id);
+        saveDatabase();
+        closeModal();
+        
+        // Pick next fallback material
+        currentMaterial = materials.length > 0 ? materials[0] : null;
+        renderMaterialList();
+        renderMaterialDetails();
+        showToast("원소재 사양이 정상적으로 삭제되었습니다.", "info");
+      }
+    });
+
+    // DB Backup (Export JSON)
+    exportDbBtn.addEventListener("click", () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(materials, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "mspecs_pro_materials_db.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("데이터베이스 백업 파일이 다운로드되었습니다.", "success");
+    });
+
+    // DB Import (Import JSON)
+    importDbBtn.addEventListener("click", () => {
+      importFile.click();
+    });
+
+    importFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            materials = imported;
+            saveDatabase();
+            if (materials.length > 0) {
+              currentMaterial = materials[0];
+            }
+            renderMaterialList();
+            renderMaterialDetails();
+            showToast("원소재 데이터베이스를 성공적으로 가져왔습니다!", "success");
+          } else {
+            showToast("데이터 구조가 올바르지 않습니다. JSON 배열 형식이어야 합니다.", "error");
+          }
+        } catch (err) {
+          showToast("파일 파싱 실패: " + err.message, "error");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+
+    // UPGRADED: EXCEL BATCH IMPORT & EXPORT LOGIC
+    
+    // 1. Open / Close Excel Modal
+    excelBatchBtn.addEventListener("click", () => {
+      excelModal.classList.remove("hidden");
+      resetExcelModal();
+    });
+
+    closeExcelModalBtn.addEventListener("click", () => excelModal.classList.add("hidden"));
+    cancelExcelModalBtn.addEventListener("click", () => excelModal.classList.add("hidden"));
+
+    function resetExcelModal() {
+      excelParsedData = [];
+      excelPreviewContainer.classList.add("hidden");
+      excelPreviewBody.innerHTML = "";
+      excelFileInput.value = "";
+      submitExcelBtn.disabled = true;
+      dropZone.className = "border-2 border-dashed border-slate-700 hover:border-emerald-500/70 bg-slate-950/20 hover:bg-emerald-500/5 rounded-xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3";
+    }
+
+    // 2. Drag & Drop handlers for DropZone
+    dropZone.addEventListener("click", () => excelFileInput.click());
+
+    ["dragenter", "dragover"].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-emerald-500", "bg-emerald-500/10");
+      }, false);
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-emerald-500", "bg-emerald-500/10");
+      }, false);
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length) {
+        excelFileInput.files = files;
+        handleExcelFile(files[0]);
+      }
+    });
+
+    excelFileInput.addEventListener("change", (e) => {
+      if (e.target.files.length) {
+        handleExcelFile(e.target.files[0]);
+      }
+    });
+
+    // 3. Main Excel Parsing & Preview Render
+    function handleExcelFile(file) {
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // Parse sheet content to JSON Array
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          
+          if (rawRows.length < 2) {
+            showToast("엑셀 파일에 데이터가 부족하거나 비어 있습니다.", "error");
+            return;
+          }
+
+          // Parse and map headers
+          const headers = rawRows[0].map(h => String(h).trim());
+          const nameIndex = headers.indexOf("강종명");
+          const categoryIndex = headers.indexOf("카테고리");
+          const descIndex = headers.indexOf("간단설명");
+          const tensileIndex = headers.indexOf("인장강도");
+          const yieldIndex = headers.indexOf("항복강도");
+          const elongationIndex = headers.indexOf("연신율");
+          const nvalueIndex = headers.indexOf("n값");
+          const trimIndex = headers.indexOf("Trim배율");
+          const holeIndex = headers.indexOf("Hole배율");
+          const bendIndex = headers.indexOf("Bend배율");
+          const springbackIndex = headers.indexOf("스프링백");
+          const lessonsIndex = headers.indexOf("트러블사례");
+          const notesIndex = headers.indexOf("특이사항");
+
+          if (nameIndex === -1 || categoryIndex === -1) {
+            showToast("표준 템플릿의 필수 항목('강종명', '카테고리')을 헤더에서 찾을 수 없습니다.", "error");
+            return;
+          }
+
+          excelParsedData = [];
+          excelPreviewBody.innerHTML = "";
+
+          // Iterate data rows (skip headers, skip sample explanation row if it exists)
+          for (let i = 1; i < rawRows.length; i++) {
+            const row = rawRows[i];
+            if (!row || row.length === 0) continue;
+
+            const name = row[nameIndex] ? String(row[nameIndex]).trim() : "";
+            if (!name || name.includes("예시") || name.includes("필수") || name === "강종명") continue;
+
+            const category = row[categoryIndex] ? String(row[categoryIndex]).trim() : "특수재/기타";
+            const desc = descIndex !== -1 && row[descIndex] ? String(row[descIndex]).trim() : `${name} 강종 사양서`;
+            
+            const tensile = tensileIndex !== -1 && row[tensileIndex] ? String(row[tensileIndex]).trim() : "300 MPa";
+            const yieldVal = yieldIndex !== -1 && row[yieldIndex] ? String(row[yieldIndex]).trim() : "";
+            const elongation = elongationIndex !== -1 && row[elongationIndex] ? String(row[elongationIndex]).trim() : "";
+            const nvalue = nvalueIndex !== -1 && row[nvalueIndex] ? String(row[nvalueIndex]).trim() : "";
+
+            const trimCoeff = trimIndex !== -1 && !isNaN(parseFloat(row[trimIndex])) ? parseFloat(row[trimIndex]) : 1.0;
+            const holeCoeff = holeIndex !== -1 && !isNaN(parseFloat(row[holeIndex])) ? parseFloat(row[holeIndex]) : 1.0;
+            const bendCoeff = bendIndex !== -1 && !isNaN(parseFloat(row[bendIndex])) ? parseFloat(row[bendIndex]) : 1.0;
+            const springback = springbackIndex !== -1 && row[springbackIndex] ? String(row[springbackIndex]).trim() : "";
+
+            const lessonsRaw = lessonsIndex !== -1 && row[lessonsIndex] ? String(row[lessonsIndex]).trim() : "";
+            const lessons = lessonsRaw ? lessonsRaw.split(/[|\n]/).map(x => x.trim()).filter(Boolean) : [];
+
+            const notesRaw = notesIndex !== -1 && row[notesIndex] ? String(row[notesIndex]).trim() : "";
+            const notes = notesRaw ? notesRaw.split(/[|\n]/).map(x => x.trim()).filter(Boolean) : [];
+
+            const exists = materials.some(m => m.name.toUpperCase() === name.toUpperCase());
+
+            const newMaterial = {
+              id: "m_user_" + Date.now() + "_" + i,
+              name,
+              category,
+              desc,
+              mechanical: { tensile, yield: yieldVal, elongation, nvalue },
+              designCoeffs: { trimCoeff, holeCoeff, bendCoeff, springback },
+              lessons,
+              notes
+            };
+
+            excelParsedData.push(newMaterial);
+
+            // Render Preview Row
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-slate-800/50 hover:bg-slate-900/40 text-xs";
+            tr.innerHTML = `
+              <td class="p-2 font-bold text-slate-100">${name}</td>
+              <td class="p-2 text-slate-400">${category}</td>
+              <td class="p-2 text-blue-400">${tensile}</td>
+              <td class="p-2 text-teal-400 font-mono">${trimCoeff}/${holeCoeff}/${bendCoeff}</td>
+              <td class="p-2">
+                ${exists 
+                  ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20">값 덮어쓰기</span>` 
+                  : `<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">신규 등록</span>`
+                }
+              </td>
+            `;
+            excelPreviewBody.appendChild(tr);
+          }
+
+          if (excelParsedData.length > 0) {
+            excelPreviewContainer.classList.remove("hidden");
+            excelImportCount.textContent = excelParsedData.length;
+            submitExcelBtn.disabled = false;
+            dropZone.className = "border border-emerald-500 bg-emerald-500/5 rounded-xl p-4 text-center cursor-pointer transition flex items-center justify-center gap-2";
+            dropZone.innerHTML = `
+              <div class="w-8 h-8 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-md">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <p class="text-xs text-emerald-300 font-semibold">${file.name}가 성공적으로 파싱되었습니다! (다시 업로드하려면 클릭)</p>
+            `;
+            showToast(`엑셀 파일에서 ${excelParsedData.length}건의 데이터를 성공적으로 읽었습니다.`, "success");
+          } else {
+            showToast("가져올 유효한 데이터 행이 발견되지 않았습니다. 포맷을 점검하십시오.", "error");
+            resetExcelModal();
+          }
+
+        } catch (err) {
+          showToast("엑셀 파일 해독 중 에러가 발생했습니다: " + err.message, "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Batch Import Application Action
+    submitExcelBtn.addEventListener("click", () => {
+      if (excelParsedData.length === 0) return;
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      excelParsedData.forEach(newM => {
+        const matchIndex = materials.findIndex(m => m.name.toUpperCase() === newM.name.toUpperCase());
+        if (matchIndex !== -1) {
+          const oldId = materials[matchIndex].id;
+          materials[matchIndex] = { ...newM, id: oldId };
+          updatedCount++;
+        } else {
+          materials.push(newM);
+          addedCount++;
+        }
+      });
+
+      saveDatabase();
+      excelModal.classList.add("hidden");
+      
+      if (excelParsedData.length > 0) {
+        currentMaterial = excelParsedData[excelParsedData.length - 1];
+      }
+
+      renderMaterialList();
+      renderMaterialDetails();
+
+      showToast(`일괄 등록 완료! (신규 등록: ${addedCount}건, 정보 업데이트: ${updatedCount}건)`, "success");
+    });
+
+    // Excel Template Builder & Direct Download Action
+    downloadTemplateBtn.addEventListener("click", () => {
+      const headers = [
+        "강종명", 
+        "카테고리", 
+        "간단설명", 
+        "인장강도", 
+        "항복강도", 
+        "연신율", 
+        "n값", 
+        "Trim배율", 
+        "Hole배율", 
+        "Bend배율", 
+        "스프링백", 
+        "트러블사례", 
+        "특이사항"
+      ];
+
+      const rows = [
+        headers,
+        [
+          "예시_SPCC_가이드", 
+          "냉연/도금", 
+          "냉간 압연 스틸, 성형성 우수 부품용", 
+          "270 MPa 이상", 
+          "140 - 240 MPa", 
+          "38% 이상", 
+          "0.22", 
+          1.0, 
+          1.0, 
+          0.8, 
+          "0.5 ~ 1.5도 탄성회복", 
+          "[드로잉 파손] 가압력이 지나치면 코너 파손 유발 | [Burr 방지] 표준 8% 클리어런스 관리 필수", 
+          "가공 전 방청 처리 준수 | 노화된 원자재 사용 시 크랙 발생 가속화 가능"
+        ],
+        [
+          "DP780_M", 
+          "고장력강", 
+          "초고장력 강판, 보강 섀시용 부재 적용", 
+          "780 MPa급", 
+          "450 - 570 MPa", 
+          "18% 이상", 
+          "0.15", 
+          1.5, 
+          1.8, 
+          2.5, 
+          "6.5도 오버벤딩 필요", 
+          "[스프링백 복원] 벽 휨 현상 빈발하여 제품 리브 형상 추가 조치 완료", 
+          "전단날 CPM 등 고하이스강 및 CVD 코팅 적극 사용 권장 | 압연 평행방향 절곡 조심"
+        ]
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      
+      const colWidths = headers.map(() => ({ wch: 18 }));
+      colWidths[2] = { wch: 35 }; 
+      colWidths[11] = { wch: 50 }; 
+      colWidths[12] = { wch: 50 }; 
+      worksheet['!cols'] = colWidths;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "금형 원소재 템플릿");
+
+      XLSX.writeFile(workbook, "mspecs_pro_material_template.xlsx");
+      showToast("일괄등록용 엑셀 가이드 템플릿 파일이 생성되었습니다.", "success");
+    });
+
+
+    // UPGRADED: Manual CSV Loading event triggers
+    btnManualSteel.addEventListener("click", () => fileManualSteel.click());
+    btnManualAlu.addEventListener("click", () => fileManualAlu.click());
+
+    fileManualSteel.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          parseAndMergeCsv(evt.target.result, 'Steel');
+          saveDatabase();
+          renderMaterialList();
+          renderMaterialDetails();
+          updateStatusIndicator('statusSteel', true, 'Steel 연동완료 (수동)');
+          showToast("Steel(강판) CSV 사양이 수동으로 성공적으로 병합되었습니다.", "success");
+        } catch (err) {
+          showToast("Steel CSV 파싱 중 실패: " + err.message, "error");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    fileManualAlu.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          parseAndMergeCsv(evt.target.result, 'Aluminum');
+          saveDatabase();
+          renderMaterialList();
+          renderMaterialDetails();
+          updateStatusIndicator('statusAlu', true, 'Aluminum 연동완료 (수동)');
+          showToast("Aluminum(알루미늄) CSV 사양이 수동으로 성공적으로 병합되었습니다.", "success");
+        } catch (err) {
+          showToast("Aluminum CSV 파싱 중 실패: " + err.message, "error");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+
+    // Initialize Page on load
+    window.onload = function() {
+      initDatabase();
+      renderMaterialList();
+      renderMaterialDetails();
+      // Auto trigger file integration
+      loadUploadedCsvs();
+    }
+  </script>
+</body>
+</html>
