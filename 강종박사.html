@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강종박사 — Steel Grade DB</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f2f1ee;color:#222;font-size:14px}
+.app{display:flex;min-height:100vh}
+aside{width:200px;background:#20242b;color:#cfd3da;padding:16px 10px;flex-shrink:0;display:flex;flex-direction:column}
+.logo{font-size:18px;font-weight:600;color:#fff;padding:6px 10px 16px;display:flex;align-items:center;gap:8px}
+.logo small{font-size:11px;font-weight:400;color:#8a919e;display:block}
+button.nav{display:block;width:100%;text-align:left;background:none;border:0;color:#cfd3da;font-size:14px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;font-family:inherit}
+button.nav:hover{background:#2c313a}
+button.nav.on{background:#3b82f6;color:#fff;font-weight:600}
+.cnt{background:#e2544a;color:#fff;border-radius:9px;font-size:11px;padding:1px 7px;margin-left:4px;display:none}
+.foot{margin-top:auto;font-size:11px;color:#7c8290;padding:10px 12px;line-height:1.6}
+main{flex:1;padding:22px 26px;max-width:1200px;min-width:0}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{color:#777;font-size:13px;margin-bottom:16px}
+.card{background:#fff;border:1px solid #e2e1dd;border-radius:10px;padding:16px}
+input[type=text],input[type=password],input[type=number],select,textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid #ccc;border-radius:7px;background:#fff;color:#222}
+input:focus,select:focus,textarea:focus{outline:2px solid #93bdf5;border-color:#3b82f6}
+button.btn{font-family:inherit;font-size:13px;padding:8px 14px;border:1px solid #bbb;border-radius:7px;background:#fff;cursor:pointer;color:#222}
+button.btn:hover{background:#f0f0ee}
+button.btn.pri{background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600}
+button.btn.pri:hover{background:#2f6fd8}
+button.btn.warn{color:#b3261e;border-color:#e0a9a5}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:5px;font-weight:600}
+.b-판재{background:#e6f1fb;color:#185fa5}
+.b-공구강{background:#eeedfe;color:#534ab7}
+.b-구조용강{background:#eaf3de;color:#3b6d11}
+.b-스테인리스{background:#e1f5ee;color:#0f6e56}
+.tag{display:inline-block;font-size:11px;background:#f1efe8;color:#5f5e5a;border-radius:10px;padding:2px 9px;margin:2px 3px 0 0}
+.grid2{display:flex;gap:16px;align-items:flex-start}
+.listpane{width:280px;flex-shrink:0}
+.glist{max-height:520px;overflow-y:auto;margin-top:8px}
+.gitem{padding:8px 10px;border-radius:7px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.gitem:hover{background:#f0efec}
+.gitem.on{background:#e6f1fb}
+.gitem b{font-size:13.5px;font-weight:600}
+.gitem span{font-size:11px;color:#888}
+.detail{flex:1;min-width:0}
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+.mcard{background:#f7f6f3;border-radius:8px;padding:10px 12px}
+.mcard p{font-size:11px;color:#8a887f;margin-bottom:3px}
+.mcard b{font-size:15px;font-weight:600;line-height:1.3}
+table.info{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+table.info td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}
+table.info td:first-child{color:#8a887f;width:110px;white-space:nowrap}
+table.cmp{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;margin-top:12px}
+table.cmp th,table.cmp td{padding:7px 8px;border-bottom:1px solid #e8e7e3;text-align:left;vertical-align:top;word-break:break-word}
+table.cmp th{font-weight:600;border-bottom:2px solid #ccc}
+table.cmp td:first-child,table.cmp th:first-child{color:#8a887f;font-weight:400;width:105px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#e6f1fb;color:#185fa5;font-size:13px;font-weight:600;padding:5px 11px;border-radius:7px}
+.chip u{cursor:pointer;text-decoration:none;font-weight:400;color:#5a8fc4}
+.reco-card{border:1px solid #e2e1dd;border-radius:9px;padding:12px 14px;margin-top:10px;background:#fff;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.reco-card:hover{border-color:#93bdf5}
+.rank{font-size:12px;font-weight:700;color:#185fa5;background:#e6f1fb;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.hl{color:#185fa5;font-weight:600}
+.note{font-size:12px;color:#8a887f;line-height:1.6;margin-top:10px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:10px}
+.formgrid label{font-size:12px;color:#666;display:block;margin-bottom:3px}
+.formgrid input,.formgrid select,.formgrid textarea{width:100%}
+#toast{position:sticky;bottom:14px;background:#20242b;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;display:none;width:fit-content;margin:14px auto 0}
+.presets button{font-size:12px;padding:5px 11px;border-radius:12px}
+@media(max-width:760px){.grid2{flex-direction:column}.listpane{width:100%}aside{width:64px}.logo small,button.nav .txt{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="logo">🔩 <span>강종박사<small>Steel Grade DB</small></span></div>
+  <button class="nav on" data-v="reco">💡 <span class="txt">강종 추천</span></button>
+  <button class="nav" data-v="search">🔍 <span class="txt">강종 검색</span></button>
+  <button class="nav" data-v="compare">📊 <span class="txt">강종 비교</span><span class="cnt" id="cmpN">0</span></button>
+  <button class="nav" data-v="admin">⚙️ <span class="txt">데이터 관리</span></button>
+  <div class="foot">공유폴더의 이 파일을<br>더블클릭하여 사용하세요.<br><br><span id="metaInfo"></span></div>
+</aside>
+<main>
+
+<section id="v-reco">
+  <h1>강종 추천</h1>
+  <p class="sub">사용 부위·용도·요구 특성을 입력하면 적합한 강종을 추천합니다.</p>
+  <div class="card">
+    <div class="row">
+      <select id="recoCat"><option value="">전체 분류</option><option>판재</option><option>공구강·금형재</option><option>구조용강</option><option>스테인리스·비철</option></select>
+      <input type="text" id="recoKw" placeholder="예: 초고장력강 트림 펀치 내마모  /  드로우 다이  /  내식 케이스" style="flex:1;min-width:220px">
+      <button class="btn pri" id="recoBtn">추천 검색</button>
+    </div>
+    <div class="row presets" style="margin-top:10px" id="recoPresets">
+      <span style="font-size:12px;color:#8a887f">빠른 검색:</span>
+      <button class="btn">트림 펀치</button><button class="btn">드로우 다이</button><button class="btn">핫스탬핑</button><button class="btn">가이드 포스트</button><button class="btn">홀더</button><button class="btn">내식 패널</button><button class="btn">지그</button><button class="btn">스프링</button>
+    </div>
+  </div>
+  <div id="recoOut"></div>
+</section>
+
+<section id="v-search" hidden>
+  <h1>강종 검색</h1>
+  <p class="sub">강종명·규격(KS/JIS/AISI/DIN)·용도로 검색하고 상세 정보를 확인합니다.</p>
+  <div class="grid2">
+    <div class="card listpane">
+      <input type="text" id="q" placeholder="SKD11, 1.2379, D2, 드로우…" style="width:100%">
+      <select id="qCat" style="width:100%;margin-top:8px"><option value="">전체 분류</option><option>판재</option><option>공구강·금형재</option><option>구조용강</option><option>스테인리스·비철</option></select>
+      <div class="glist" id="glist"></div>
+    </div>
+    <div class="card detail" id="detail"><p style="color:#999">좌측 목록에서 강종을 선택하세요.</p></div>
+  </div>
+</section>
+
+<section id="v-compare" hidden>
+  <h1>강종 비교</h1>
+  <p class="sub">2~4개 강종의 규격·물성·경도를 나란히 비교합니다.</p>
+  <div class="card">
+    <div class="row" id="cmpChips">
+      <select id="cmpAdd"><option value="">+ 강종 추가 (최대 4)</option></select>
+    </div>
+    <div id="cmpOut" style="margin-top:6px"></div>
+    <canvas id="radar" width="860" height="300" style="width:100%;max-width:860px;display:none;margin-top:14px"></canvas>
+  </div>
+</section>
+
+<section id="v-admin" hidden>
+  <h1>데이터 관리</h1>
+  <p class="sub">강종 추가·수정·삭제 후 반드시 [파일에 저장]을 눌러 공유폴더 파일에 덮어쓰세요.</p>
+  <div class="card" id="adminGate">
+    <div class="row"><input type="password" id="pwIn" placeholder="관리 비밀번호"><button class="btn pri" id="pwBtn">잠금 해제</button></div>
+    <p class="note">초기 비밀번호: 0000 (해제 후 변경 가능)</p>
+  </div>
+  <div id="adminBody" hidden>
+    <div class="card" style="margin-bottom:14px">
+      <div class="row">
+        <button class="btn pri" id="btnSave">💾 파일에 저장 (공유폴더 덮어쓰기)</button>
+        <button class="btn" id="btnNew">＋ 새 강종 추가</button>
+        <button class="btn" id="btnBackup">백업 다운로드</button>
+        <span style="flex:1"></span>
+        <input type="password" id="pwNew" placeholder="새 비밀번호">
+        <button class="btn" id="pwChg">비밀번호 변경</button>
+      </div>
+      <p class="note">저장 시 파일 선택창이 뜨면 <b>공유폴더의 강종박사.html 파일을 선택</b>해 덮어쓰세요. 이후에는 자동으로 같은 파일에 저장됩니다. 팀원은 파일을 다시 열면 최신 데이터가 반영됩니다.</p>
+    </div>
+    <div class="card" id="adminForm" hidden></div>
+    <div class="card"><div id="adminList"></div></div>
+  </div>
+</section>
+
+<div id="toast"></div>
+</main>
+</div>
+
+<script type="application/json" id="dbdata">
+{
+"meta":{"pw":"0000","updated":"2026-07-06","by":"팀 공용 DB"},
+"grades":[
+{"id":1,"n":"SPHC","cat":"판재","tg":["열연","연강","성형","드로잉","브래킷"],"std":{"ks":"SPHC","jis":"SPHC","aisi":"—","din":"DD11 (유사)"},"chem":"C≤0.15, Mn≤0.60","ts":"270 이상","ys":"약 200","el":"29 이상 (t1.6~2.0)","hb":"HRB 45~60","hrc":"—","htok":"불필요","ht":"열연 그대로 사용 (열처리 없음)","uses":"섀시 브래킷, 멤버류, 일반 성형 부품","note":"열연 일반용 연강판. 산세재는 SPHC-P. 두께 1.2~14mm","sc":[3,2,9,9,10]},
+{"id":2,"n":"SPCC","cat":"판재","tg":["냉연","연강","성형","외판","케이스"],"std":{"ks":"SPCC","jis":"SPCC","aisi":"CS Type B (유사)","din":"DC01"},"chem":"C≤0.15, Mn≤0.60","ts":"270 이상","ys":"약 140~240","el":"36 이상 (t0.6~1.0)","hb":"HRB 35~57","hrc":"—","htok":"불필요","ht":"—","uses":"내·외판 패널, 케이스, 커버, 가전 부품","note":"냉연 일반용. 표면 미려, 치수정밀. 두께 0.3~3.2mm","sc":[3,2,9,9,9]},
+{"id":3,"n":"SPCE","cat":"판재","tg":["냉연","딥드로잉","성형"],"std":{"ks":"SPCE","jis":"SPCE","aisi":"DS/EDDS (유사)","din":"DC04"},"chem":"C≤0.08","ts":"270 이상","ys":"약 130~200","el":"41 이상","hb":"HRB≤50","hrc":"—","htok":"불필요","ht":"—","uses":"딥드로잉 부품, 오일팬, 복잡 성형 패널","note":"딥드로잉용(비시효성). SPCD보다 성형성 우수","sc":[2,2,10,9,8]},
+{"id":4,"n":"SGCC","cat":"판재","tg":["용융아연도금","내식","성형","덕트"],"std":{"ks":"SGCC","jis":"SGCC","aisi":"—","din":"DX51D+Z"},"chem":"모재 연강 + Zn 도금","ts":"270 이상","ys":"약 200","el":"—","hb":"HRB 40~60","hrc":"—","htok":"불필요","ht":"—","uses":"내식 패널, 덕트, 지붕재, 가전 케이스","note":"용융아연도금강판. 도금량 Z08~Z27. 용접 시 흄 주의","sc":[3,2,8,8,8]},
+{"id":5,"n":"SECC","cat":"판재","tg":["전기아연도금","내식","전착도장","가전"],"std":{"ks":"SECC","jis":"SECC","aisi":"—","din":"DC01+ZE"},"chem":"모재 SPCC + 전기Zn 도금","ts":"270 이상","ys":"약 140~240","el":"36 이상","hb":"HRB 35~57","hrc":"—","htok":"불필요","ht":"—","uses":"가전 새시, PC 케이스, 전장 부품","note":"도금층 얇고 균일, 도장성 우수. 성형성은 SPCC 수준","sc":[3,2,8,8,8]},
+{"id":6,"n":"SAPH440","cat":"판재","tg":["열연","고장력","구조","자동차"],"std":{"ks":"SAPH440","jis":"SAPH440","aisi":"—","din":"S420MC (유사)"},"chem":"C≤0.25, Mn≤1.50","ts":"440 이상","ys":"305 이상 (t<6)","el":"29 이상","hb":"HRB 70~85","hrc":"—","htok":"불필요","ht":"—","uses":"자동차 섀시, 크로스멤버, 휠 디스크","note":"자동차 구조용 열연 고장력. 성형성·용접성 양호","sc":[5,3,7,8,8]},
+{"id":7,"n":"SPFH590","cat":"판재","tg":["열연","고장력","서스펜션"],"std":{"ks":"SPFH590","jis":"SPFH590","aisi":"—","din":"S550MC (유사)"},"chem":"C≤0.18, Mn≤2.0 (석출강화)","ts":"590 이상","ys":"420 이상","el":"19 이상","hb":"HRB 85~95","hrc":"—","htok":"불필요","ht":"—","uses":"로어암, 서스펜션 부품, 휠","note":"열연 고성형성 고장력. 버링·플랜지 성형 양호","sc":[6,4,6,7,7]},
+{"id":8,"n":"SPFC590 (DP590)","cat":"판재","tg":["냉연","고장력","DP강","멤버"],"std":{"ks":"SPFC590D","jis":"SPFC590","aisi":"DP590","din":"HCT590X"},"chem":"C≤0.12, Mn 1.5~2.5 (2상조직)","ts":"590 이상","ys":"340~420","el":"20 이상","hb":"HRB 85~95","hrc":"—","htok":"불필요","ht":"—","uses":"사이드멤버, 필러 보강재, 시트 부품","note":"페라이트+마르텐사이트 DP강. 가공경화 커서 내덴트성 우수","sc":[6,4,6,7,7]},
+{"id":9,"n":"SPFC780 (DP780)","cat":"판재","tg":["냉연","초고장력","DP강","스프링백","범퍼"],"std":{"ks":"SPFC780D","jis":"SPFC780","aisi":"DP780","din":"HCT780X"},"chem":"C≤0.15, Mn 2.0~2.8","ts":"780 이상","ys":"420~550","el":"14 이상","hb":"HRB 95~102","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼 레일, 시트 프레임, 보강재","note":"스프링백 큼 → 금형 보정 필수. 전단면 지연파괴 주의","sc":[7,5,5,6,6]},
+{"id":10,"n":"SPFC980 (DP980)","cat":"판재","tg":["냉연","초고장력","DP강","스프링백","필러"],"std":{"ks":"SPFC980Y","jis":"SPFC980","aisi":"DP980","din":"HCT980X"},"chem":"C≤0.18, Mn 2.3~3.0","ts":"980 이상","ys":"600~750","el":"8~12","hb":"HRC 25~32 상당","hrc":"—","htok":"불필요","ht":"—","uses":"센터필러 보강재, 루프레일, 사이드실","note":"금형 마모·치핑 심함 → 공구강 DC53/분말강 권장. 스프링백 대책 필수","sc":[8,6,4,5,6]},
+{"id":11,"n":"SPFC1180","cat":"판재","tg":["냉연","초고장력","스프링백","임팩트빔"],"std":{"ks":"SPFC1180Y","jis":"SPFC1180","aisi":"DP1180/CP1180","din":"HCT1180X"},"chem":"C≤0.20, Mn 2.5~3.0","ts":"1180 이상","ys":"820 이상","el":"5~10","hb":"HRC 33~38 상당","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼빔, 도어 임팩트빔, 필러 보강재","note":"냉간성형 한계 수준. 전단하중 급증, 지연파괴·에지크랙 관리 필요","sc":[9,7,3,4,5]},
+{"id":12,"n":"22MnB5 (핫스탬핑재)","cat":"판재","tg":["핫스탬핑","초고장력","보론강","다이퀜칭","필러"],"std":{"ks":"HPF1470 (포스코)","jis":"—","aisi":"Usibor 1500 (유사)","din":"22MnB5 / 1.5528"},"chem":"C0.22, Mn1.2, B0.002~0.005, Al-Si 도금","ts":"성형 전 약 600 / 성형 후 1,470~1,500","ys":"성형 후 1,000 이상","el":"성형 후 5~8","hb":"성형 전 HB 약 170","hrc":"성형 후 45~50","htok":"필수 (다이퀜칭)","ht":"900~930℃ 가열 → 금형 내 급랭(다이퀜칭, 냉각속도 27℃/s 이상)","uses":"센터필러, A필러, 루프레일, 범퍼빔, 터널","note":"금형은 SKD61 계열 + 냉각회로 필수. 성형 후 레이저 트림","sc":[10,8,4,3,5]},
+{"id":13,"n":"SKD11","cat":"공구강·금형재","tg":["냉간공구강","내마모","트림","피어싱","블랭킹","펀치","다이"],"std":{"ks":"STD11","jis":"SKD11","aisi":"D2","din":"1.2379 (X153CrMoV12)"},"chem":"C1.40~1.60, Cr11~13, Mo0.8~1.2, V0.2~0.5","ts":"— (경도 기준 관리)","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"58~62","htok":"가능","ht":"담금질 1,000~1,050℃ 공랭 → 뜨임 180~200℃(저온) 또는 500~530℃(고온·PVD 전처리, 2회)","uses":"트림·피어싱 펀치/다이, 블랭킹 다이, 폼 스틸, 게이지","note":"고Cr 냉간공구강의 표준. 와이어컷 크랙 주의(고온뜨임 권장). 대형·복잡형상은 DC53 검토","sc":[8,9,4,4,7]},
+{"id":14,"n":"DC53","cat":"공구강·금형재","tg":["냉간공구강","인성","내치핑","트림","초고장력","와이어컷"],"std":{"ks":"— (대동특수강 상표)","jis":"SKD11 개량종","aisi":"—","din":"—"},"chem":"C1.0, Cr8.0, Mo2.0, V0.3","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"60~62","htok":"가능","ht":"담금질 1,020~1,050℃ → 고온뜨임 520~530℃ 2회","uses":"고장력강 트림 펀치, 정밀 블랭킹 다이, 와이어컷 가공 부품","note":"SKD11 대비 인성 약 2배·고온뜨임으로 와이어컷 크랙 저감. 초고장력강 금형의 표준 선택지","sc":[8,9,7,5,6]},
+{"id":15,"n":"SKD61","cat":"공구강·금형재","tg":["열간공구강","핫스탬핑","내열","다이캐스팅","금형"],"std":{"ks":"STD61","jis":"SKD61","aisi":"H13","din":"1.2344 (X40CrMoV5-1)"},"chem":"C0.32~0.42, Cr4.5~5.5, Mo1.0~1.5, V0.8~1.2","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤229","hrc":"45~53","htok":"가능","ht":"담금질 1,000~1,030℃ 공랭 → 뜨임 550~620℃ 2회 이상","uses":"핫스탬핑 금형, 다이캐스팅 금형, 열간 단조형, 압출 다이","note":"열간공구강 표준. 고온강도·열피로 우수. 질화처리 병용 多","sc":[7,7,8,6,7]},
+{"id":16,"n":"SKS3","cat":"공구강·금형재","tg":["냉간공구강","유냉","소형","게이지"],"std":{"ks":"STS3","jis":"SKS3","aisi":"O1 (유사)","din":"1.2510 (유사)"},"chem":"C0.90~1.00, Cr0.5~1.0, W0.5~1.0","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤217","hrc":"58~62","htok":"가능","ht":"담금질 800~850℃ 유냉 → 뜨임 150~200℃","uses":"소형 블랭킹 다이, 게이지, 간이 금형, 지그 부품","note":"저가·수급 용이·담금 변형 적음(유냉). 내마모성은 SKD11 대비 낮음","sc":[6,8,5,6,9]},
+{"id":17,"n":"SK105 (구 SK3)","cat":"공구강·금형재","tg":["탄소공구강","저가","수공구","펀치"],"std":{"ks":"STC105","jis":"SK105","aisi":"W1-10 (유사)","din":"C105U"},"chem":"C1.00~1.10","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤212","hrc":"60~64 (수냉)","htok":"가능","ht":"담금질 760~820℃ 수냉 → 뜨임 150~200℃","uses":"소형 펀치, 정, 수공구, 판스프링, 칼날","note":"담금성 낮아 대형·후물 부적합. 표면만 경화되는 특성","sc":[6,8,4,7,10]},
+{"id":18,"n":"SKH51","cat":"공구강·금형재","tg":["고속도강","펀치","내마모","고온경도","커터"],"std":{"ks":"SKH51","jis":"SKH51","aisi":"M2","din":"1.3343 (HS6-5-2)"},"chem":"C0.85, W6.0, Mo5.0, Cr4.0, V2.0","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"62~65","htok":"가능","ht":"담금질 1,190~1,230℃ → 뜨임 540~570℃ 3회","uses":"고속 피어싱 펀치, 냉간 단조 펀치, 탭·드릴·커터","note":"고경도·고온경도 우수. 소경 펀치의 표준. 인성은 낮은 편","sc":[9,10,5,3,4]},
+{"id":19,"n":"Vanadis 4 Extra (분말강)","cat":"공구강·금형재","tg":["분말강","내치핑","초고장력","냉간","파인블랭킹","펀치"],"std":{"ks":"— (Uddeholm 상표)","jis":"—","aisi":"—","din":"— (PM 8%Cr계)"},"chem":"C1.4, Cr4.7, Mo3.5, V3.7 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"58~64","htok":"가능","ht":"담금질 1,020~1,100℃ → 고온뜨임 525~560℃ 2~3회","uses":"초고장력강(980MPa~) 트림·피어싱 펀치, 파인블랭킹 공구","note":"치핑·크랙 다발 부위 최적. 인성+내마모 균형 최상급. 고가 — 문제 부위에 선별 적용","sc":[9,9,8,4,3]},
+{"id":20,"n":"NAK80","cat":"공구강·금형재","tg":["프리하든","사출금형","경면","방전가공"],"std":{"ks":"— (대동특수강 상표)","jis":"—","aisi":"P21 개량 (유사)","din":"—"},"chem":"C0.15, Ni3.0, Cu1.0, Al1.0 (석출경화계)","ts":"약 1,250 (출하 상태)","ys":"—","el":"—","hb":"—","hrc":"37~43 (프리하든 출하)","htok":"불필요 (프리하든)","ht":"열처리 없이 가공 후 바로 사용. 경면·부식(엠보) 가공성 우수","uses":"플라스틱 사출금형 캐비티·코어, 경면 요구 부품","note":"열처리 변형 리스크 제로. 용접 보수성 양호","sc":[6,5,7,7,6]},
+{"id":21,"n":"FC300 (회주철)","cat":"공구강·금형재","tg":["주철","드로우","대형","주물","다이본체"],"std":{"ks":"GC300","jis":"FC300","aisi":"Class 45 (유사)","din":"EN-GJL-300"},"chem":"C2.9~3.4, Si1.5~2.2 (편상흑연)","ts":"300 이상","ys":"—","el":"—","hb":"HB 187~241","hrc":"화염경화 시 표면 45~50","htok":"표면경화 가능","ht":"필요 부위 화염(고주파)경화 → 표면 45~50 HRC","uses":"드로우 다이, 다이 본체, 패드, 대형 금형 주물","note":"진동 감쇠·습동성 양호, 주조로 대형 일체 제작. 인장·충격에 약함","sc":[4,4,3,8,9]},
+{"id":22,"n":"FCD550 (구상흑연주철)","cat":"공구강·금형재","tg":["구상흑연주철","드로우","화염경화","비드","홀더"],"std":{"ks":"GCD550","jis":"FCD550","aisi":"80-55-06 (유사)","din":"EN-GJS-550-5"},"chem":"C3.4~3.9, Si2.0~2.8 (구상흑연)","ts":"550 이상","ys":"370 이상","el":"5 이상","hb":"HB 217~269","hrc":"화염경화 시 표면 48~55","htok":"표면경화 가능","ht":"드로우 비드·R부 화염경화 → 표면 48~55 HRC","uses":"드로우 다이·비드, 블랭크 홀더, 대형 폼 다이","note":"FC 대비 강도·인성 우수. 외판 드로우 금형의 표준 소재","sc":[6,5,5,7,8]},
+{"id":23,"n":"SS400 (SS275)","cat":"구조용강","tg":["일반구조","용접","저가","플레이트"],"std":{"ks":"SS275 (구 SS400)","jis":"SS400","aisi":"A36 (유사)","din":"S275JR (유사)"},"chem":"C·Mn 규정 없음 (P·S≤0.050)","ts":"400~510","ys":"245 이상 (t≤16)","el":"21 이상","hb":"HB 110~140","hrc":"— (열처리 부적합)","htok":"불가 (성분 미보증)","ht":"—","uses":"베이스 플레이트, 용접 구조물, 브래킷, 프레임","note":"KS 개정으로 SS275 표기. 열처리 품질 보증 불가 — 경화 필요 시 S45C 사용","sc":[4,2,8,8,10]},
+{"id":24,"n":"S45C","cat":"구조용강","tg":["기계구조","조질","고주파","홀더","가이드","플레이트"],"std":{"ks":"SM45C","jis":"S45C","aisi":"1045","din":"C45 / 1.0503"},"chem":"C0.42~0.48, Mn0.6~0.9","ts":"생재 약 570 / 조질 690 이상","ys":"조질 490 이상","el":"조질 17 이상","hb":"생재 HB 167~229 / 조질 HB 201~269","hrc":"고주파 표면 50~55","htok":"가능 (조질·고주파)","ht":"담금질 820~870℃ 수냉 → 뜨임 550~650℃ (조질) / 고주파 표면경화","uses":"다이 홀더, 다이세트 플레이트, 가이드 포스트, 축류","note":"기계구조용 탄소강의 표준. 금형 구조부품 최다 사용","sc":[6,5,6,8,9]},
+{"id":25,"n":"S55C","cat":"구조용강","tg":["기계구조","조질","고주파","플레이트"],"std":{"ks":"SM55C","jis":"S55C","aisi":"1055","din":"C55 / 1.0535"},"chem":"C0.52~0.58, Mn0.6~0.9","ts":"조질 780 이상","ys":"조질 590 이상","el":"조질 14 이상","hb":"생재 HB 183~255 / 조질 HB 229~285","hrc":"고주파 표면 55~60","htok":"가능","ht":"담금질 800~850℃ 수냉 → 뜨임 550~650℃ / 고주파 표면경화","uses":"금형 플레이트, 펀치 백킹 플레이트, 캠 부품","note":"S45C보다 경도 확보 유리, 용접성은 저하","sc":[6,6,5,7,9]},
+{"id":26,"n":"SCM415","cat":"구조용강","tg":["침탄","표면경화","기어","핀"],"std":{"ks":"SCM415","jis":"SCM415","aisi":"4118 (유사)","din":"25CrMo4 (유사)"},"chem":"C0.13~0.18, Cr0.9~1.2, Mo0.15~0.3","ts":"침탄조질 830 이상","ys":"—","el":"—","hb":"생재 HB 143~187","hrc":"침탄 후 표면 58~62 (심부 HRC 30~40)","htok":"침탄 경화","ht":"침탄 900~950℃ → 담금질 → 뜨임 150~200℃","uses":"기어, 캠, 가이드 핀, 롤러 핀","note":"표면 경질 + 심부 인성. 내충격 습동부품에 적합","sc":[6,7,7,6,7]},
+{"id":27,"n":"SCM440","cat":"구조용강","tg":["조질","고강도","샤프트","볼트"],"std":{"ks":"SCM440","jis":"SCM440","aisi":"4140","din":"42CrMo4 / 1.7225"},"chem":"C0.38~0.43, Cr0.9~1.2, Mo0.15~0.3","ts":"조질 850~1,000","ys":"조질 700 이상","el":"조질 12 이상","hb":"조질 HB 285~352","hrc":"조질 28~34 / 고주파 표면 50~55","htok":"가능","ht":"담금질 830~880℃ 유냉 → 뜨임 550~650℃ / 고주파 병용","uses":"고강도 볼트, 샤프트, 금형 구조부품, 로드","note":"조질강의 표준. 담금성 양호해 후물도 균질 경화","sc":[7,6,7,6,7]},
+{"id":28,"n":"SNCM439","cat":"구조용강","tg":["조질","고인성","대형","샤프트","기어"],"std":{"ks":"SNCM439","jis":"SNCM439","aisi":"4340","din":"34CrNiMo6 (유사)"},"chem":"C0.36~0.43, Ni1.6~2.0, Cr0.6~1.0, Mo0.15~0.3","ts":"조질 980~1,080","ys":"조질 880 이상","el":"조질 16 이상","hb":"조질 HB 293~352","hrc":"조질 30~38","htok":"가능","ht":"담금질 820~870℃ 유냉 → 뜨임 570~650℃","uses":"대형 샤프트, 고하중 기어, 커넥팅 로드","note":"Ni 첨가로 대단면 인성 우수. 고가","sc":[8,6,8,5,5]},
+{"id":29,"n":"SUJ2","cat":"구조용강","tg":["베어링강","내마모","가이드","부시","롤러"],"std":{"ks":"STB2","jis":"SUJ2","aisi":"52100","din":"100Cr6 / 1.3505"},"chem":"C0.95~1.10, Cr1.30~1.60","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤201","hrc":"58~64","htok":"가능","ht":"담금질 800~840℃ 유냉 → 뜨임 150~180℃","uses":"베어링, 가이드 포스트·부시, 롤러, 볼","note":"고탄소 크롬 베어링강. 구름피로·내마모 최적. 습동부품 표준","sc":[8,9,4,5,7]},
+{"id":30,"n":"SUP9","cat":"구조용강","tg":["스프링강","판스프링","스태빌라이저"],"std":{"ks":"SPS9","jis":"SUP9","aisi":"5160 (유사)","din":"55Cr3"},"chem":"C0.52~0.60, Mn0.65~0.95, Cr0.65~0.95","ts":"조질 1,230 이상","ys":"조질 1,080 이상","el":"조질 9 이상","hb":"조질 HB 363~429","hrc":"조질 40~47","htok":"가능","ht":"담금질 830~860℃ 유냉 → 뜨임 460~520℃","uses":"겹판·코일 스프링, 스태빌라이저 바","note":"스프링용 실리콘망간·크롬강. 피로수명 관리 중요","sc":[7,7,6,5,7]},
+{"id":31,"n":"SM490A","cat":"구조용강","tg":["용접구조","교량","크레인"],"std":{"ks":"SM355 (구 SM490A)","jis":"SM490A","aisi":"A572 Gr.50 (유사)","din":"S355JR (유사)"},"chem":"C≤0.20, Mn≤1.60","ts":"490~610","ys":"325 이상 (t≤16)","el":"22 이상","hb":"HB 130~160","hrc":"—","htok":"불가 (용접구조용)","ht":"—","uses":"용접 구조물, 크레인, 교량, 산업기계 프레임","note":"용접성 보증 구조용강. KS 개정으로 SM355 표기","sc":[5,3,8,8,9]},
+{"id":32,"n":"SUS304","cat":"스테인리스·비철","tg":["오스테나이트","내식","비자성","배관","케이스"],"std":{"ks":"STS304","jis":"SUS304","aisi":"304","din":"1.4301 (X5CrNi18-10)"},"chem":"C≤0.08, Cr18~20, Ni8~10.5","ts":"520 이상","ys":"205 이상","el":"40 이상","hb":"HB≤187","hrc":"— (열처리 경화 불가)","htok":"불가 (가공경화만 가능)","ht":"고용화 1,010~1,150℃ 급랭 (연화 목적)","uses":"외장재, 배관, 주방기기, 내식 케이스","note":"가장 범용적인 스테인리스. 프레스 시 가공경화·지연균열(시효크랙) 주의","sc":[5,3,9,4,6]},
+{"id":33,"n":"SUS316L","cat":"스테인리스·비철","tg":["오스테나이트","내식","내약품","용접"],"std":{"ks":"STS316L","jis":"SUS316L","aisi":"316L","din":"1.4404"},"chem":"C≤0.03, Cr16~18, Ni10~14, Mo2~3","ts":"480 이상","ys":"175 이상","el":"40 이상","hb":"HB≤187","hrc":"—","htok":"불가","ht":"고용화 처리","uses":"내약품 부품, 해안·화학 설비, 의료기기","note":"Mo 첨가로 내공식성 향상, 저탄소로 용접부 내입계부식","sc":[5,3,9,4,5]},
+{"id":34,"n":"SUS430","cat":"스테인리스·비철","tg":["페라이트","자성","저가내식","가전"],"std":{"ks":"STS430","jis":"SUS430","aisi":"430","din":"1.4016"},"chem":"C≤0.12, Cr16~18 (Ni 무첨가)","ts":"450 이상","ys":"205 이상","el":"22 이상","hb":"HB≤183","hrc":"—","htok":"불가","ht":"어닐링 780~850℃","uses":"가전 패널, 몰딩, 주방 내장재","note":"Ni 무첨가로 저가·자성 있음. 딥드로잉 시 리징(줄무늬) 주의","sc":[4,3,7,5,8]},
+{"id":35,"n":"SUS420J2","cat":"스테인리스·비철","tg":["마르텐사이트","내식","경화","칼날","금형"],"std":{"ks":"STS420J2","jis":"SUS420J2","aisi":"420","din":"1.4028 (X30Cr13)"},"chem":"C0.26~0.40, Cr12~14","ts":"담금질 후 약 1,600","ys":"—","el":"—","hb":"어닐링 HB≤235","hrc":"담금질 후 50~55","htok":"가능","ht":"담금질 980~1,040℃ 유냉 → 뜨임 150~400℃","uses":"칼날, 노즐, 내식 금형 부품, 밸브","note":"열처리 경화 가능한 스테인리스. 내식+경도 동시 요구 부위","sc":[7,8,4,5,6]},
+{"id":36,"n":"SUS440C","cat":"스테인리스·비철","tg":["마르텐사이트","고경도","내식베어링","정밀"],"std":{"ks":"STS440C","jis":"SUS440C","aisi":"440C","din":"1.4125"},"chem":"C0.95~1.20, Cr16~18","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤269","hrc":"58~60","htok":"가능","ht":"담금질 1,010~1,070℃ 유냉 → 뜨임 150~180℃","uses":"내식 베어링, 밸브 시트, 정밀 습동부품","note":"스테인리스 중 최고 경도. 내식성은 420 대비 낮음","sc":[8,9,3,4,5]},
+{"id":37,"n":"STS630 (17-4PH)","cat":"스테인리스·비철","tg":["석출경화","고강도","내식","샤프트","인서트"],"std":{"ks":"STS630","jis":"SUS630","aisi":"630 (17-4PH)","din":"1.4542"},"chem":"C≤0.07, Cr15~17.5, Ni3~5, Cu3~5, Nb","ts":"H900 시효 후 약 1,310","ys":"H900 1,175 이상","el":"10 이상","hb":"고용화 HB≤363","hrc":"H900 40~44","htok":"석출경화","ht":"고용화 1,040℃ → 시효 480℃×1h (H900)","uses":"샤프트, 밸브, 항공 부품, 내식 금형 인서트","note":"저온 시효로 변형 극소 — 정밀부품에 유리","sc":[9,7,6,4,4]},
+{"id":38,"n":"A5052","cat":"스테인리스·비철","tg":["알루미늄","판금","내식","케이스"],"std":{"ks":"A5052","jis":"A5052","aisi":"5052","din":"AlMg2.5 / 3.3523"},"chem":"Al-Mg2.5 (비열처리 합금)","ts":"H32 약 230","ys":"H32 약 195","el":"H32 약 12","hb":"HB 약 60","hrc":"—","htok":"불가 (가공경화만)","ht":"—","uses":"판금 케이스, 패널, 연료탱크, 전장 커버","note":"성형성·내식성·용접성 균형. 판금용 알루미늄의 표준","sc":[3,1,8,8,7]},
+{"id":39,"n":"A6061-T6","cat":"스테인리스·비철","tg":["알루미늄","열처리합금","지그","구조"],"std":{"ks":"A6061","jis":"A6061","aisi":"6061","din":"AlMg1SiCu / 3.3211"},"chem":"Al-Mg-Si (열처리 합금)","ts":"T6 310 이상","ys":"T6 275 이상","el":"T6 약 12","hb":"HB 약 95","hrc":"—","htok":"가능 (T6 시효)","ht":"용체화 530℃ → 인공시효 175℃×8h (T6)","uses":"지그·픽스처, 구조 프레임, 기계 부품","note":"강도·내식·가공성 균형. 지그 제작 표준재","sc":[4,2,7,9,7]},
+{"id":40,"n":"A7075-T6","cat":"스테인리스·비철","tg":["알루미늄","고강도","지그","항공","게이지"],"std":{"ks":"A7075","jis":"A7075","aisi":"7075","din":"AlZn5.5MgCu / 3.4365"},"chem":"Al-Zn5.6-Mg2.5-Cu1.6","ts":"T6 570 이상","ys":"T6 505 이상","el":"T6 약 11","hb":"HB 약 150","hrc":"—","htok":"가능 (T6)","ht":"용체화 470℃ → 시효 120℃×24h (T6)","uses":"고강도 지그, 체커 게이지, 항공 구조부품","note":"알루미늄 최고 강도급(초초두랄루민). 응력부식균열 주의, 용접 부적합","sc":[6,3,5,8,5]},
+{"id":41,"n":"ADC12","cat":"스테인리스·비철","tg":["알루미늄","다이캐스팅","하우징"],"std":{"ks":"ALDC12","jis":"ADC12","aisi":"A383 (유사)","din":"AlSi11Cu3 (유사)"},"chem":"Al-Si11-Cu2.5","ts":"약 230","ys":"약 150","el":"1~3","hb":"HB 약 75","hrc":"—","htok":"불가 (일반적)","ht":"—","uses":"다이캐스팅 하우징, 커버, 브래킷","note":"다이캐스팅 표준 합금. 주조성 최우수, 연신율 낮음","sc":[3,2,3,8,8]},
+{"id":42,"n":"C1100 (전기동)","cat":"스테인리스·비철","tg":["동","도전율","전극","부스바"],"std":{"ks":"C1100","jis":"C1100","aisi":"C11000","din":"Cu-ETP / 2.0065"},"chem":"Cu≥99.90 (터프피치동)","ts":"연질 195 이상 / 경질 275 이상","ys":"—","el":"연질 35 이상","hb":"연질 HB 약 45 / 경질 HB 약 90","hrc":"—","htok":"불가 (가공경화만)","ht":"—","uses":"부스바, 용접 전극 홀더, 방열 부품, 전기 단자","note":"도전율 100% IACS급. 수소취성 주의(환원분위기 가열 금지)","sc":[2,1,9,7,6]},
+{"id":43,"n":"C2801 (황동)","cat":"스테인리스·비철","tg":["황동","단자","장식","프레스"],"std":{"ks":"C2801","jis":"C2801","aisi":"C28000","din":"CuZn40 / 2.0360"},"chem":"Cu59~62, Zn 잔부 (6-4황동)","ts":"325 이상","ys":"—","el":"경질 15~ / 연질 35~","hb":"HB 약 80~120","hrc":"—","htok":"불가","ht":"응력제거 어닐링 250~300℃ (시효균열 방지)","uses":"단자, 커넥터, 장식 부품, 기계 부품","note":"프레스·절삭성 양호. 암모니아 분위기 응력부식균열 주의","sc":[3,2,7,9,7]},
+{"id":44,"n":"C5191 (인청동)","cat":"스테인리스·비철","tg":["인청동","스프링성","커넥터","단자","도전"],"std":{"ks":"C5191","jis":"C5191","aisi":"C51900","din":"CuSn6 / 2.1020"},"chem":"Cu-Sn6-P0.2","ts":"H재 590 이상","ys":"—","el":"H재 10 이상","hb":"H재 HV 180~230","hrc":"—","htok":"불가 (가공경화)","ht":"응력제거 저온 어닐링","uses":"스프링 단자, 커넥터, 스위치 접점, 와셔","note":"스프링성·내피로·도전성 균형. 커넥터 단자 표준재","sc":[4,3,7,7,5]},
+{"id":45,"n":"C1720 (베릴륨동)","cat":"스테인리스·비철","tg":["베릴륨동","석출경화","고강도스프링","인서트","단자"],"std":{"ks":"C1720","jis":"C1720","aisi":"C17200","din":"CuBe2 / 2.1247"},"chem":"Cu-Be1.8~2.0-Co/Ni","ts":"시효 후 1,100~1,300","ys":"시효 후 1,000 이상","el":"시효 후 3~10","hb":"—","hrc":"시효 후 36~42","htok":"석출경화","ht":"용체화 790℃ → 시효 315~330℃×2~3h","uses":"고강도 스프링 단자, 금형 냉각 인서트, 방폭 공구","note":"동합금 최고 강도. 열전도 우수 — 사출금형 코어 인서트 활용. 분진 유해(가공 시 주의)","sc":[8,6,6,5,3]},
+{"id":46,"n":"SPCD","cat":"판재","tg":["냉연","연강","드로잉","성형"],"std":{"ks":"SPCD","jis":"SPCD","aisi":"DS (유사)","din":"DC03"},"chem":"C≤0.10","ts":"270 이상","ys":"약 130~210","el":"38 이상","hb":"HRB≤52","hrc":"—","htok":"불필요","ht":"—","uses":"드로잉 성형 패널, 내판 부품","note":"SPCC와 SPCE의 중간 등급(드로잉용)","sc":[2,2,9,9,9]},
+{"id":47,"n":"SPHD","cat":"판재","tg":["열연","연강","드로잉"],"std":{"ks":"SPHD","jis":"SPHD","aisi":"—","din":"DD12 (유사)"},"chem":"C≤0.10","ts":"270 이상","ys":"약 180","el":"30 이상 (t1.6~2.0)","hb":"HRB 40~55","hrc":"—","htok":"불필요","ht":"—","uses":"열연 드로잉 부품, 휠 림, 프레임","note":"SPHC보다 드로잉성 우수","sc":[3,2,9,9,9]},
+{"id":48,"n":"SPHE","cat":"판재","tg":["열연","연강","딥드로잉"],"std":{"ks":"SPHE","jis":"SPHE","aisi":"—","din":"DD13 (유사)"},"chem":"C≤0.08","ts":"270 이상","ys":"약 170","el":"31 이상 (t1.6~2.0)","hb":"HRB≤55","hrc":"—","htok":"불필요","ht":"—","uses":"열연 딥드로잉 부품, 오일팬, 케이스","note":"열연 딥드로잉용 최고 성형 등급","sc":[3,2,10,9,8]},
+{"id":49,"n":"SAPH370","cat":"판재","tg":["열연","고장력","구조","자동차"],"std":{"ks":"SAPH370","jis":"SAPH370","aisi":"—","din":"S315MC (유사)"},"chem":"C≤0.25","ts":"370 이상","ys":"225 이상 (t<6)","el":"32 이상","hb":"HRB 60~75","hrc":"—","htok":"불필요","ht":"—","uses":"자동차 프레임, 멤버, 브래킷","note":"자동차 구조용 열연 시리즈의 저강도 등급","sc":[4,3,8,8,9]},
+{"id":50,"n":"SAPH400","cat":"판재","tg":["열연","고장력","구조","자동차"],"std":{"ks":"SAPH400","jis":"SAPH400","aisi":"—","din":"S355MC (유사)"},"chem":"C≤0.25","ts":"400 이상","ys":"255 이상 (t<6)","el":"31 이상","hb":"HRB 65~80","hrc":"—","htok":"불필요","ht":"—","uses":"섀시 부품, 크로스멤버, 서스펜션","note":"SAPH440과 함께 섀시 표준재","sc":[5,3,7,8,8]},
+{"id":51,"n":"SPFH490","cat":"판재","tg":["열연","고장력","성형","서스펜션"],"std":{"ks":"SPFH490","jis":"SPFH490","aisi":"—","din":"S460MC (유사)"},"chem":"C≤0.18","ts":"490 이상","ys":"325 이상","el":"22 이상","hb":"HRB 78~90","hrc":"—","htok":"불필요","ht":"—","uses":"로어암, 서스펜션 링크, 휠 디스크","note":"열연 고성형 고장력(석출강화)","sc":[5,4,7,7,8]},
+{"id":52,"n":"SPFH540","cat":"판재","tg":["열연","고장력","성형"],"std":{"ks":"SPFH540","jis":"SPFH540","aisi":"—","din":"S500MC (유사)"},"chem":"C≤0.18","ts":"540 이상","ys":"355 이상","el":"21 이상","hb":"HRB 82~92","hrc":"—","htok":"불필요","ht":"—","uses":"서스펜션 부품, 시트 프레임, 보강재","note":"SPFH590 하위 등급","sc":[6,4,6,7,7]},
+{"id":53,"n":"SPFC340 (BH강)","cat":"판재","tg":["냉연","BH강","소부경화","외판"],"std":{"ks":"SPFC340H","jis":"SPFC340H","aisi":"BH180 (유사)","din":"HC180B (유사)"},"chem":"C≤0.08 (고용C 제어)","ts":"340 이상","ys":"175~245 (소부 후 +30~40)","el":"34 이상","hb":"HRB 50~65","hrc":"—","htok":"불필요","ht":"도장 소부(170℃×20min)로 항복강도 상승","uses":"후드, 도어, 루프 등 외판 패널","note":"소부경화(Bake Hardening)강 — 성형 시 연질, 도장 후 내덴트성 확보","sc":[4,2,9,8,7]},
+{"id":54,"n":"SPFC370","cat":"판재","tg":["냉연","고장력","성형"],"std":{"ks":"SPFC370","jis":"SPFC370","aisi":"—","din":"HC220I (유사)"},"chem":"C≤0.10","ts":"370 이상","ys":"185~285","el":"32 이상","hb":"HRB 55~70","hrc":"—","htok":"불필요","ht":"—","uses":"내판 패널, 멤버, 보강재","note":"냉연 고장력 시리즈 저강도 등급","sc":[4,2,8,8,8]},
+{"id":55,"n":"SPFC390","cat":"판재","tg":["냉연","고장력","성형"],"std":{"ks":"SPFC390","jis":"SPFC390","aisi":"—","din":"HC260LA (유사)"},"chem":"C≤0.12","ts":"390 이상","ys":"235~335","el":"30 이상","hb":"HRB 60~72","hrc":"—","htok":"불필요","ht":"—","uses":"내판, 시트 부품, 보강재","note":"—","sc":[4,3,8,8,8]},
+{"id":56,"n":"SPFC440","cat":"판재","tg":["냉연","고장력","멤버"],"std":{"ks":"SPFC440","jis":"SPFC440","aisi":"—","din":"HC300LA (유사)"},"chem":"C≤0.12","ts":"440 이상","ys":"265~365","el":"26 이상","hb":"HRB 68~80","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 필러, 시트 프레임","note":"—","sc":[5,3,7,8,8]},
+{"id":57,"n":"SPFC490","cat":"판재","tg":["냉연","고장력","멤버"],"std":{"ks":"SPFC490","jis":"SPFC490","aisi":"—","din":"HC340LA (유사)"},"chem":"C≤0.14","ts":"490 이상","ys":"295~395","el":"23 이상","hb":"HRB 74~85","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 범퍼 스테이, 보강재","note":"—","sc":[5,4,7,7,7]},
+{"id":58,"n":"SPFC540Y","cat":"판재","tg":["냉연","고장력","저항복비","성형"],"std":{"ks":"SPFC540Y","jis":"SPFC540Y","aisi":"—","din":"HC340X (유사)"},"chem":"C≤0.14 (저항복비형)","ts":"540 이상","ys":"245~385 (저항복비)","el":"24 이상","hb":"HRB 78~88","hrc":"—","htok":"불필요","ht":"—","uses":"복잡 성형 멤버, 휠하우스","note":"Y형 = 저항복비로 성형성 개선","sc":[6,4,7,7,7]},
+{"id":59,"n":"DC06 (IF강)","cat":"판재","tg":["냉연","IF강","초딥드로잉","성형","외판"],"std":{"ks":"— (포스코 CQ-EDDQ급)","jis":"SPCEN (유사)","aisi":"EDDS","din":"DC06 / 1.0873"},"chem":"C≤0.02, Ti/Nb 안정화 (IF강)","ts":"270~330","ys":"120~170","el":"39 이상 (r값≥1.8)","hb":"HRB≤45","hrc":"—","htok":"불필요","ht":"—","uses":"복잡 형상 외판·내판, 휠하우스, 사이드패널 일체성형","note":"Interstitial-Free강 — 성형성 최고 등급. AutoForm/LS-DYNA 라이브러리 표준재","sc":[2,1,10,9,7]},
+{"id":60,"n":"DX54D+Z","cat":"판재","tg":["용융아연도금","딥드로잉","도금","내식"],"std":{"ks":"SGCD3 (유사)","jis":"SGCD3 (유사)","aisi":"—","din":"DX54D+Z / 1.0306"},"chem":"C≤0.12 (딥드로잉용 도금 원판)","ts":"260~350","ys":"120~220","el":"36 이상","hb":"HRB≤55","hrc":"—","htok":"불필요","ht":"—","uses":"방청 요구 딥드로잉 부품, 도어 내판","note":"GI(용융아연도금) 딥드로잉 등급. 도금 밀착성 관리 필요","sc":[3,2,9,8,7]},
+{"id":61,"n":"DX56D+Z","cat":"판재","tg":["용융아연도금","초딥드로잉","도금","IF강"],"std":{"ks":"—","jis":"—","aisi":"—","din":"DX56D+Z / 1.0355"},"chem":"C≤0.02 (IF 원판 + Zn 도금)","ts":"260~350","ys":"120~180","el":"39 이상 (r값≥1.9)","hb":"HRB≤50","hrc":"—","htok":"불필요","ht":"—","uses":"복잡 성형 도금 패널, 사이드 아우터","note":"도금강판 최고 성형 등급","sc":[2,1,10,8,6]},
+{"id":62,"n":"HC180B (BH180)","cat":"판재","tg":["냉연","BH강","소부경화","외판"],"std":{"ks":"—","jis":"SPFC340H (유사)","aisi":"BH180","din":"HC180B / 1.0395"},"chem":"C≤0.06 (고용C 제어)","ts":"300~360","ys":"180~230 (소부 후 BH2≥30)","el":"34 이상","hb":"HRB 50~62","hrc":"—","htok":"불필요","ht":"도장 소부 170℃×20min → 항복 +30MPa 이상","uses":"후드·도어·펜더 외판","note":"유럽계 BH강 호칭. AutoForm 표준 수록재","sc":[4,2,9,8,7]},
+{"id":63,"n":"HC220B (BH220)","cat":"판재","tg":["냉연","BH강","소부경화","외판"],"std":{"ks":"—","jis":"—","aisi":"BH220","din":"HC220B / 1.0396"},"chem":"C≤0.08","ts":"320~400","ys":"220~270 (소부경화형)","el":"32 이상","hb":"HRB 55~68","hrc":"—","htok":"불필요","ht":"도장 소부로 항복강도 상승","uses":"외판 패널, 내덴트 요구 부위","note":"—","sc":[4,2,8,8,7]},
+{"id":64,"n":"HC220Y (IF-HS)","cat":"판재","tg":["냉연","IF강","고강도","딥드로잉"],"std":{"ks":"—","jis":"—","aisi":"IF260/300 (유사)","din":"HC220Y / 1.0925"},"chem":"C≤0.01, P 첨가 (고강도 IF)","ts":"340~410","ys":"220~270","el":"32 이상 (r값≥1.5)","hb":"HRB 58~70","hrc":"—","htok":"불필요","ht":"—","uses":"고성형 요구 내판, 휠하우스, 플로어","note":"고강도 IF강 — 강도와 딥드로잉성 양립","sc":[4,2,9,8,6]},
+{"id":65,"n":"HC260LA","cat":"판재","tg":["냉연","HSLA","저합금고장력","멤버"],"std":{"ks":"—","jis":"SPFC390 (유사)","aisi":"HSLA260","din":"HC260LA / 1.0480"},"chem":"C≤0.10, Nb/Ti 미량합금","ts":"350~430","ys":"260~330","el":"26 이상","hb":"HRB 60~74","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 브래킷, 시트 부품","note":"LA = 미량합금(HSLA) 냉연 시리즈","sc":[4,3,8,8,8]},
+{"id":66,"n":"HC300LA","cat":"판재","tg":["냉연","HSLA","저합금고장력","멤버"],"std":{"ks":"—","jis":"SPFC440 (유사)","aisi":"HSLA300","din":"HC300LA / 1.0489"},"chem":"C≤0.10, Nb/Ti","ts":"380~480","ys":"300~380","el":"23 이상","hb":"HRB 65~78","hrc":"—","htok":"불필요","ht":"—","uses":"구조 멤버, 필러, 브래킷","note":"—","sc":[5,3,7,8,8]},
+{"id":67,"n":"HC340LA","cat":"판재","tg":["냉연","HSLA","저합금고장력"],"std":{"ks":"—","jis":"SPFC490 (유사)","aisi":"HSLA340","din":"HC340LA / 1.0548"},"chem":"C≤0.11, Nb/Ti","ts":"410~510","ys":"340~420","el":"21 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 범퍼 스테이, 시트 레일","note":"—","sc":[5,4,7,7,7]},
+{"id":68,"n":"HC420LA","cat":"판재","tg":["냉연","HSLA","저합금고장력"],"std":{"ks":"—","jis":"—","aisi":"HSLA420","din":"HC420LA / 1.0556"},"chem":"C≤0.12, Nb/Ti","ts":"470~590","ys":"420~520","el":"17 이상","hb":"HRB 78~88","hrc":"—","htok":"불필요","ht":"—","uses":"고강성 멤버, 시트 구조부품","note":"HSLA 냉연 최고 강도급","sc":[6,4,6,7,7]},
+{"id":69,"n":"S355MC","cat":"판재","tg":["열연","HSLA","열간압연","섀시"],"std":{"ks":"—","jis":"SAPH400 (유사)","aisi":"HSLA 50 (유사)","din":"S355MC / 1.0976"},"chem":"C≤0.12, Nb/Ti/V 미량합금","ts":"430~550","ys":"355 이상","el":"23 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"섀시, 프레임, 크로스멤버","note":"EN 열연 HSLA(MC) 시리즈 — CAE 라이브러리 표준","sc":[5,3,7,8,8]},
+{"id":70,"n":"S420MC","cat":"판재","tg":["열연","HSLA","섀시"],"std":{"ks":"—","jis":"SPFH490 (유사)","aisi":"—","din":"S420MC / 1.0980"},"chem":"C≤0.12, 미량합금","ts":"480~620","ys":"420 이상","el":"16 이상","hb":"HRB 76~86","hrc":"—","htok":"불필요","ht":"—","uses":"로어암, 서브프레임, 휠","note":"—","sc":[5,4,7,7,8]},
+{"id":71,"n":"S500MC","cat":"판재","tg":["열연","HSLA","고강도"],"std":{"ks":"—","jis":"SPFH540 (유사)","aisi":"—","din":"S500MC / 1.0984"},"chem":"C≤0.12, 미량합금","ts":"550~700","ys":"500 이상","el":"12 이상","hb":"HRB 82~92","hrc":"—","htok":"불필요","ht":"—","uses":"서스펜션 부품, 크레인 붐, 프레임","note":"—","sc":[6,4,6,7,7]},
+{"id":72,"n":"S600MC","cat":"판재","tg":["열연","HSLA","고강도"],"std":{"ks":"—","jis":"—","aisi":"—","din":"S600MC / 1.8969"},"chem":"C≤0.12, 미량합금","ts":"650~820","ys":"600 이상","el":"13 이상","hb":"HRB 88~97","hrc":"—","htok":"불필요","ht":"—","uses":"고하중 섀시, 특장차 프레임","note":"—","sc":[7,5,5,6,6]},
+{"id":73,"n":"S700MC","cat":"판재","tg":["열연","HSLA","초고강도"],"std":{"ks":"—","jis":"—","aisi":"—","din":"S700MC / 1.8974"},"chem":"C≤0.12, Nb/Ti/V/Mo","ts":"750~950","ys":"700 이상","el":"10 이상","hb":"HRC 20~26 상당","hrc":"—","htok":"불필요","ht":"—","uses":"경량 고강도 섀시, 크레인, 트레일러","note":"열연 HSLA 최고 강도급. 굽힘 R 관리 필요","sc":[8,5,4,5,5]},
+{"id":74,"n":"DP450 (HCT450X)","cat":"판재","tg":["냉연","DP강","고장력","성형"],"std":{"ks":"—","jis":"—","aisi":"DP450","din":"HCT450X / 1.0937"},"chem":"C≤0.10, Mn 1.2~1.8 (2상조직)","ts":"450 이상","ys":"260~340","el":"27 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"외판·내판 겸용, 시트 부품","note":"DP강 최저 강도급 — 성형성 우수. DP590~1180은 SPFC 항목 참조","sc":[5,3,8,8,7]},
+{"id":75,"n":"TRIP590 (HCT590T)","cat":"판재","tg":["냉연","TRIP강","고장력","고연신","충돌"],"std":{"ks":"—","jis":"—","aisi":"TRIP590","din":"HCT590T / 1.0954"},"chem":"C≤0.20, Mn 1.5~2.0, Si/Al (잔류γ)","ts":"590 이상","ys":"380~480","el":"26 이상","hb":"HRB 85~95","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 필러, 충돌 에너지 흡수 부품","note":"변태유기소성(TRIP) — 성형 중 잔류오스테나이트→마르텐사이트 변태로 고연신. 용접성 주의(고Si)","sc":[6,4,8,6,6]},
+{"id":76,"n":"TRIP690 (HCT690T)","cat":"판재","tg":["냉연","TRIP강","고장력","고연신"],"std":{"ks":"—","jis":"—","aisi":"TRIP690","din":"HCT690T / 1.0958"},"chem":"C≤0.24, Mn 1.6~2.2, Si/Al","ts":"690 이상","ys":"430~550","el":"23 이상","hb":"HRB 92~100","hrc":"—","htok":"불필요","ht":"—","uses":"필러, 사이드실, 루프레일","note":"—","sc":[7,5,7,6,5]},
+{"id":77,"n":"TRIP780 (HCT780T)","cat":"판재","tg":["냉연","TRIP강","초고장력","고연신"],"std":{"ks":"—","jis":"—","aisi":"TRIP780","din":"HCT780T / 1.0948"},"chem":"C≤0.25, Mn 1.8~2.4, Si/Al","ts":"780 이상","ys":"440~560","el":"21 이상","hb":"HRB 95~103","hrc":"—","htok":"불필요","ht":"—","uses":"충돌 부재, 필러 보강재, 멤버","note":"동일 강도 DP 대비 연신율 높음 — 복잡 성형 유리","sc":[7,5,7,5,5]},
+{"id":78,"n":"CP800 (HCT780C)","cat":"판재","tg":["냉연","CP강","고항복","버링","홀확장"],"std":{"ks":"—","jis":"—","aisi":"CP800","din":"HCT780C / 1.0956"},"chem":"C≤0.18, Mn 1.8~2.5, Nb/Ti (복합조직)","ts":"780 이상","ys":"570~720 (고항복비)","el":"10 이상","hb":"HRC 22~28 상당","hrc":"—","htok":"불필요","ht":"—","uses":"섀시 링크, 시트 레일, 버링·플랜지 부품","note":"Complex Phase강 — 홀확장성(HER)·굽힘성 우수, 에지크랙에 강함","sc":[7,6,5,6,5]},
+{"id":79,"n":"CP1000 (HCT980C)","cat":"판재","tg":["냉연","CP강","초고장력","홀확장"],"std":{"ks":"—","jis":"—","aisi":"CP1000","din":"HCT980C / 1.0961"},"chem":"C≤0.20, Mn 2.0~2.7","ts":"980 이상","ys":"700~850","el":"7 이상","hb":"HRC 28~34 상당","hrc":"—","htok":"불필요","ht":"—","uses":"시트 구조, 범퍼 스테이, 섀시 보강","note":"—","sc":[8,7,4,5,5]},
+{"id":80,"n":"CP1180","cat":"판재","tg":["냉연","CP강","초고장력"],"std":{"ks":"—","jis":"—","aisi":"CP1180","din":"HCT1180C (유사)"},"chem":"C≤0.20, Mn 2.2~2.9","ts":"1,180 이상","ys":"850 이상","el":"6 이상","hb":"HRC 34~39 상당","hrc":"—","htok":"불필요","ht":"—","uses":"필러 보강, 사이드실, 롤포밍 부재","note":"고항복비 — 롤포밍·굽힘 성형 위주","sc":[9,7,3,4,4]},
+{"id":81,"n":"MS1200 (마르텐사이트강)","cat":"판재","tg":["냉연","MS강","초고장력","롤포밍","범퍼"],"std":{"ks":"—","jis":"—","aisi":"MS1200 / M190","din":"HDT1200M (유사)"},"chem":"C≤0.14, Mn≤2.0 (마르텐사이트 조직)","ts":"1,200 이상","ys":"900~1,150","el":"5 이상","hb":"HRC 36~40 상당","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼빔, 도어 임팩트빔, 루프 보강재","note":"냉간 프레스 거의 불가 — 롤포밍·단순 굽힘 전용","sc":[9,8,2,3,4]},
+{"id":82,"n":"MS1500 (마르텐사이트강)","cat":"판재","tg":["냉연","MS강","초고장력","롤포밍"],"std":{"ks":"—","jis":"—","aisi":"MS1500 / M220","din":"HDT1500M (유사)"},"chem":"C≤0.18, Mn≤2.0","ts":"1,470 이상","ys":"1,200 이상","el":"4 이상","hb":"HRC 42~46 상당","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼빔, 임팩트빔, 시트 부재(롤포밍)","note":"냉간성형강 최고 강도급. 지연파괴 관리 필수","sc":[10,8,2,3,4]},
+{"id":83,"n":"QP980 (3세대강)","cat":"판재","tg":["냉연","QP강","3세대강","고연신","초고장력"],"std":{"ks":"— (포스코 980XF급)","jis":"—","aisi":"QP980","din":"—"},"chem":"C0.2, Mn 2~3, Si (Q&P 열처리 조직)","ts":"980 이상","ys":"550~700","el":"15 이상","hb":"HRC 28~33 상당","hrc":"—","htok":"불필요","ht":"—","uses":"필러, 멤버 — DP980 대비 복잡 성형 가능 부위","note":"Quenching & Partitioning 3세대강 — DP980 대비 연신율 약 2배","sc":[8,6,6,5,4]},
+{"id":84,"n":"QP1180 (3세대강)","cat":"판재","tg":["냉연","QP강","3세대강","초고장력"],"std":{"ks":"— (포스코 1180XF급)","jis":"—","aisi":"QP1180","din":"—"},"chem":"C0.2~0.25, Mn 2.5~3.5, Si","ts":"1,180 이상","ys":"750~950","el":"10 이상","hb":"HRC 34~39 상당","hrc":"—","htok":"불필요","ht":"—","uses":"센터필러, 사이드실 — 냉간성형 초고장력 부위","note":"핫스탬핑 대체 가능 부위에 적용 확대 중","sc":[9,7,5,4,4]},
+{"id":85,"n":"TWIP980","cat":"판재","tg":["냉연","TWIP강","고Mn","초고연신","충돌"],"std":{"ks":"— (포스코 TWIP)","jis":"—","aisi":"TWIP980","din":"HCT980G2 (유사)"},"chem":"C0.6, Mn 15~20 (오스테나이트)","ts":"980 이상","ys":"450~600","el":"50 이상","hb":"HRB 95~102","hrc":"—","htok":"불필요","ht":"—","uses":"충돌 에너지 흡수 부재, 복잡 성형 초고장력 부품","note":"쌍정유기소성 — 강도와 연신 동시 최고급. 고가·용접성 제약, 지연파괴 주의","sc":[8,5,10,4,2]},
+{"id":86,"n":"PHS1800 (핫스탬핑 1.8GPa급)","cat":"판재","tg":["핫스탬핑","초고장력","보론강","다이퀜칭"],"std":{"ks":"HPF1800 (포스코)","jis":"—","aisi":"Usibor 2000 (유사)","din":"34MnB5 계열"},"chem":"C0.30~0.34, Mn1.2, B, Al-Si 도금","ts":"성형 후 1,800~2,000","ys":"성형 후 1,300 이상","el":"성형 후 4~6","hb":"성형 전 HB 약 180","hrc":"성형 후 50~54","htok":"필수 (다이퀜칭)","ht":"900~930℃ 가열 → 금형 내 급랭","uses":"범퍼빔, 필러 보강재, 초경량 충돌 부재","note":"22MnB5(1.5GPa) 상위 등급. 수소지연파괴 관리 중요","sc":[10,9,3,3,4]},
+{"id":87,"n":"AA5182-O","cat":"스테인리스·비철","tg":["알루미늄","차체","내판","판재"],"std":{"ks":"A5182","jis":"A5182P","aisi":"AA5182","din":"AlMg4.5Mn0.4 / 3.3547"},"chem":"Al-Mg4.5-Mn0.35","ts":"약 275","ys":"약 130","el":"약 24","hb":"HB 약 65","hrc":"—","htok":"불가 (비열처리)","ht":"—","uses":"차체 내판(도어·후드 이너), 구조 판재","note":"차체용 5000계 대표재 — 성형성 우수, 스트레처 스트레인(외판 부적합) 주의","sc":[3,1,9,8,6]},
+{"id":88,"n":"AA5754-O","cat":"스테인리스·비철","tg":["알루미늄","차체","구조","판재"],"std":{"ks":"A5754","jis":"—","aisi":"AA5754","din":"AlMg3 / 3.3535"},"chem":"Al-Mg3.0","ts":"약 220","ys":"약 100","el":"약 24","hb":"HB 약 55","hrc":"—","htok":"불가","ht":"—","uses":"플로어, 대시패널, 구조 판재","note":"내식·용접성 양호한 차체 구조용","sc":[3,1,9,8,7]},
+{"id":89,"n":"AA6016-T4","cat":"스테인리스·비철","tg":["알루미늄","차체","외판","소부경화","판재"],"std":{"ks":"A6016","jis":"—","aisi":"AA6016","din":"AlSi1.2Mg0.4 / 3.3210"},"chem":"Al-Si1.2-Mg0.4 (열처리 합금)","ts":"T4 약 240","ys":"T4 약 130 (도장소부 후 약 200)","el":"약 26","hb":"HB 약 70","hrc":"—","htok":"가능 (T4→소부경화)","ht":"용체화 T4 출하 → 도장 소부(185℃)로 강도 상승","uses":"후드·도어·펜더 등 외판(유럽계)","note":"유럽 차체 외판 표준. 표면 품질·헤밍성 우수","sc":[4,2,8,8,5]},
+{"id":90,"n":"AA6111-T4","cat":"스테인리스·비철","tg":["알루미늄","차체","외판","소부경화","판재"],"std":{"ks":"A6111","jis":"—","aisi":"AA6111","din":"—"},"chem":"Al-Si0.8-Mg0.7-Cu0.7","ts":"T4 약 290","ys":"T4 약 160 (소부 후 약 240)","el":"약 25","hb":"HB 약 75","hrc":"—","htok":"가능 (T4→소부경화)","ht":"T4 출하 → 도장 소부로 강도 상승","uses":"후드·도어 외판(북미계)","note":"6016 대비 고강도, Cu 첨가로 내식성 다소 저하","sc":[4,2,8,8,5]},
+{"id":91,"n":"AZ31B (마그네슘 판재)","cat":"스테인리스·비철","tg":["마그네슘","경량","온간성형","판재"],"std":{"ks":"—","jis":"MP1B (유사)","aisi":"AZ31B","din":"3.5312"},"chem":"Mg-Al3-Zn1","ts":"약 250","ys":"약 150","el":"상온 12~15 / 온간 40 이상","hb":"HB 약 50","hrc":"—","htok":"불가 (일반적)","ht":"—","uses":"경량 커버, 전자기기 케이스, 시트 프레임","note":"상온 성형성 낮음 → 200~250℃ 온간성형 필수. 방식 처리 필요. LS-DYNA 수록재","sc":[3,1,4,7,4]},
+{"id":92,"n":"CR340LA","cat":"판재","tg":["VDA","현대기아","냉연","HSLA","저합금고장력"],"std":{"ks":"CR340LA (VDA 239-100)","jis":"SPFC490 (유사)","aisi":"HSLA340","din":"HC340LA 동급"},"chem":"C≤0.11, Nb/Ti 미량합금","ts":"410~510","ys":"340~420","el":"21 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 브래킷, 시트 레일","note":"VDA/현대·기아 표기. GI 도금재는 GI-CR340 등으로 호칭. GI50/50 = 양면 아연도금 50/50g/m²","sc":[5,4,7,7,7]},
+{"id":93,"n":"CR380LA","cat":"판재","tg":["VDA","현대기아","냉연","HSLA"],"std":{"ks":"CR380LA (VDA)","jis":"—","aisi":"HSLA380","din":"HC380LA / 1.0550"},"chem":"C≤0.11, Nb/Ti","ts":"450~570","ys":"380~480","el":"19 이상","hb":"HRB 74~84","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 필러, 보강 브래킷","note":"BOM 표기 예: CR380LA GI50/50/-U (양면 도금, 무표면처리)","sc":[5,4,7,7,7]},
+{"id":94,"n":"CR420LA","cat":"판재","tg":["VDA","현대기아","냉연","HSLA"],"std":{"ks":"CR420LA (VDA)","jis":"—","aisi":"HSLA420","din":"HC420LA 동급"},"chem":"C≤0.12, Nb/Ti","ts":"470~590","ys":"420~520","el":"17 이상","hb":"HRB 78~88","hrc":"—","htok":"불필요","ht":"—","uses":"고강성 멤버, 시트 구조부품","note":"—","sc":[6,4,6,7,7]},
+{"id":95,"n":"CR460LA","cat":"판재","tg":["VDA","현대기아","냉연","HSLA"],"std":{"ks":"CR460LA (VDA)","jis":"—","aisi":"HSLA460","din":"HC460LA / 1.0570"},"chem":"C≤0.12, Nb/Ti","ts":"520~640","ys":"460~560","el":"15 이상","hb":"HRB 82~90","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 범퍼 스테이, 시트 부품","note":"BOM 대체재질 예: GI-CR420 ↔ CR460LA 검토 시 항복강도 차이 확인","sc":[6,4,6,7,6]},
+{"id":96,"n":"CR500LA","cat":"판재","tg":["VDA","현대기아","냉연","HSLA"],"std":{"ks":"CR500LA (VDA)","jis":"—","aisi":"HSLA500","din":"HC500LA"},"chem":"C≤0.12, Nb/Ti","ts":"560~700","ys":"500~620","el":"13 이상","hb":"HRB 85~93","hrc":"—","htok":"불필요","ht":"—","uses":"고강성 구조부품, 시트 프레임","note":"냉연 HSLA 최상급","sc":[7,5,5,6,6]},
+{"id":97,"n":"HR380LA","cat":"판재","tg":["VDA","현대기아","열연","HSLA"],"std":{"ks":"HR380LA (VDA)","jis":"SPFH? (유사없음)","aisi":"—","din":"S380MC (유사)"},"chem":"C≤0.12, 미량합금","ts":"450~590","ys":"380~480","el":"19 이상","hb":"HRB 74~84","hrc":"—","htok":"불필요","ht":"—","uses":"섀시, 멤버, 브래킷","note":"열연 VDA HSLA. R- 접두어는 산세재 표기 관행","sc":[5,3,7,7,8]},
+{"id":98,"n":"HR420LA","cat":"판재","tg":["VDA","현대기아","열연","HSLA"],"std":{"ks":"HR420LA (VDA)","jis":"SPFH490 (유사)","aisi":"—","din":"S420MC 동급"},"chem":"C≤0.12, 미량합금","ts":"480~620","ys":"420~520","el":"17 이상","hb":"HRB 76~86","hrc":"—","htok":"불필요","ht":"—","uses":"로어암, 서브프레임, 휠 디스크","note":"BOM 대체재질 예: R-HR420(산세), HGI-HR420(도금)","sc":[5,4,7,7,8]},
+{"id":99,"n":"HR500LA","cat":"판재","tg":["VDA","현대기아","열연","HSLA"],"std":{"ks":"HR500LA (VDA)","jis":"SPFH540 (유사)","aisi":"—","din":"S500MC 동급"},"chem":"C≤0.12, 미량합금","ts":"550~700","ys":"500~620","el":"14 이상","hb":"HRB 82~92","hrc":"—","htok":"불필요","ht":"—","uses":"서스펜션, 섀시 보강, 프레임","note":"PO-HR550 = 산세유(Pickled & Oiled) 열연 HR550 계열 표기","sc":[6,4,6,7,7]},
+{"id":100,"n":"HR660Y760T-CP","cat":"판재","tg":["VDA","현대기아","열연","CP강","고항복","홀확장"],"std":{"ks":"HR660Y760T-CP (VDA)","jis":"—","aisi":"CP800 (유사)","din":"HDT760C (유사)"},"chem":"C≤0.18, Mn≤2.5, Nb/Ti (복합조직)","ts":"760 이상","ys":"660~820","el":"10 이상","hb":"HRC 22~28 상당","hrc":"—","htok":"불필요","ht":"—","uses":"시트 리클라이너, 컨트롤암, 섀시 고하중부","note":"열연 CP — 홀확장·버링 우수. BOM 표기: HR660Y760T-CP GI50/50/-U","sc":[7,6,5,6,5]},
+{"id":101,"n":"CR330Y590T-DP","cat":"판재","tg":["VDA","현대기아","냉연","DP강","고장력"],"std":{"ks":"CR330Y590T-DP (VDA)","jis":"SPFC590 동급","aisi":"DP590","din":"HCT590X 동급"},"chem":"C≤0.12, Mn 1.5~2.5","ts":"590 이상","ys":"330~430","el":"20 이상","hb":"HRB 85~95","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 필러 보강재, 시트","note":"GI 도금재 호칭 예: GI-CR590T340Y-DP","sc":[6,4,6,7,7]},
+{"id":102,"n":"CR440Y780T-DP","cat":"판재","tg":["VDA","현대기아","냉연","DP강","초고장력"],"std":{"ks":"CR440Y780T-DP (VDA)","jis":"SPFC780 동급","aisi":"DP780","din":"HCT780X 동급"},"chem":"C≤0.15, Mn 2.0~2.8","ts":"780 이상","ys":"440~550","el":"14 이상","hb":"HRB 95~102","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼 레일, 보강재, 시트 프레임","note":"—","sc":[7,5,5,6,6]},
+{"id":103,"n":"CR590Y980T-DP","cat":"판재","tg":["VDA","현대기아","냉연","DP강","초고장력","고항복"],"std":{"ks":"CR590Y980T-DP (VDA)","jis":"SPFC980 (유사)","aisi":"DP980","din":"HCT980X 동급"},"chem":"C≤0.18, Mn 2.3~3.0","ts":"980 이상","ys":"590~740","el":"10 이상","hb":"HRC 25~32 상당","hrc":"—","htok":"불필요","ht":"—","uses":"센터필러, 루프레일, 사이드실","note":"—","sc":[8,6,4,5,6]},
+{"id":104,"n":"CR700Y980T-DP","cat":"판재","tg":["VDA","현대기아","냉연","DP강","초고장력","고항복"],"std":{"ks":"CR700Y980T-DP (VDA)","jis":"—","aisi":"DP980HY","din":"HCT980XG (유사)"},"chem":"C≤0.18, Mn 2.3~3.0 (고항복형)","ts":"980 이상","ys":"700~850","el":"8 이상","hb":"HRC 28~33 상당","hrc":"—","htok":"불필요","ht":"—","uses":"센터필러 보강재, 사이드실, 범퍼","note":"고항복형 DP980. BOM 표기: CR700Y980T GI50/50/-U — 스프링백 커서 금형 보정 필수, 금형날 DC53/분말강 권장","sc":[8,6,4,5,5]},
+{"id":105,"n":"CR850Y1180T-DP","cat":"판재","tg":["VDA","현대기아","냉연","DP강","초고장력"],"std":{"ks":"CR850Y1180T-DP (VDA)","jis":"SPFC1180 (유사)","aisi":"DP1180","din":"HCT1180X 동급"},"chem":"C≤0.20, Mn 2.5~3.0","ts":"1,180 이상","ys":"850~1,050","el":"6 이상","hb":"HRC 33~38 상당","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼빔, 임팩트빔, 필러 보강","note":"지연파괴·에지크랙 관리 필수","sc":[9,7,3,4,5]},
+{"id":106,"n":"CR400Y690T-TR","cat":"판재","tg":["VDA","현대기아","냉연","TRIP강","고연신"],"std":{"ks":"CR400Y690T-TR (VDA)","jis":"—","aisi":"TRIP690","din":"HCT690T 동급"},"chem":"C≤0.24, Mn 1.6~2.2, Si/Al","ts":"690 이상","ys":"400~500","el":"22 이상","hb":"HRB 92~100","hrc":"—","htok":"불필요","ht":"—","uses":"충돌 에너지 흡수 부재, 필러","note":"—","sc":[7,5,7,6,5]},
+{"id":107,"n":"HR440Y580T-FB","cat":"판재","tg":["VDA","현대기아","열연","FB강","홀확장","버링"],"std":{"ks":"HR440Y580T-FB (VDA)","jis":"—","aisi":"FB590","din":"HDT580F (유사)"},"chem":"C≤0.18, Mn≤1.8 (페라이트-베이나이트)","ts":"580 이상","ys":"440~560","el":"16 이상","hb":"HRB 84~92","hrc":"—","htok":"불필요","ht":"—","uses":"로어암, 휠 디스크, 버링 성형 부품","note":"Ferrite-Bainite강 — 홀확장률(HER) 80% 이상, 에지크랙에 강함","sc":[6,4,7,7,7]},
+{"id":108,"n":"JSC270E","cat":"판재","tg":["일본","JFE","닛폰스틸","냉연","초딥드로잉"],"std":{"ks":"—","jis":"JSC270E (JSA 자동차규격)","aisi":"EDDS","din":"DC06 동급"},"chem":"C≤0.02 (IF강)","ts":"270 이상","ys":"120~180","el":"42 이상","hb":"HRB≤45","hrc":"—","htok":"불필요","ht":"—","uses":"복잡 성형 내·외판(일본계 OEM)","note":"일본 자동차 냉연 호칭(JSC). SPCE/DC06급 초딥드로잉","sc":[2,1,10,9,7]},
+{"id":109,"n":"JSC590Y","cat":"판재","tg":["일본","냉연","DP강","저항복"],"std":{"ks":"—","jis":"JSC590Y","aisi":"DP590","din":"HCT590X (유사)"},"chem":"C≤0.12, Mn 1.5~2.5","ts":"590 이상","ys":"230~330 (저항복형)","el":"24 이상","hb":"HRB 85~93","hrc":"—","htok":"불필요","ht":"—","uses":"복잡 성형 멤버, 필러(일본계)","note":"Y = 저항복형(성형성 우선). R = 고항복형","sc":[6,4,7,7,7]},
+{"id":110,"n":"JSC780Y","cat":"판재","tg":["일본","냉연","DP강","초고장력"],"std":{"ks":"—","jis":"JSC780Y","aisi":"DP780","din":"HCT780X (유사)"},"chem":"C≤0.15, Mn 2.0~2.8","ts":"780 이상","ys":"400~550","el":"16 이상","hb":"HRB 95~102","hrc":"—","htok":"불필요","ht":"—","uses":"보강재, 범퍼, 시트(일본계)","note":"—","sc":[7,5,5,6,6]},
+{"id":111,"n":"JSC980Y","cat":"판재","tg":["일본","냉연","DP강","초고장력"],"std":{"ks":"—","jis":"JSC980Y","aisi":"DP980","din":"HCT980X (유사)"},"chem":"C≤0.18, Mn 2.3~3.0","ts":"980 이상","ys":"550~730","el":"12 이상","hb":"HRC 25~32 상당","hrc":"—","htok":"불필요","ht":"—","uses":"필러, 루프레일(일본계)","note":"—","sc":[8,6,4,5,6]},
+{"id":112,"n":"JAC270D","cat":"판재","tg":["일본","GA도금","합금화아연도금","드로잉"],"std":{"ks":"SGACD (유사)","jis":"JAC270D","aisi":"—","din":"DX53D+ZF (유사)"},"chem":"C≤0.06 + Zn-Fe 합금화 도금","ts":"270 이상","ys":"140~220","el":"36 이상","hb":"HRB≤55","hrc":"—","htok":"불필요","ht":"—","uses":"도금 내판, 도어 이너(일본계)","note":"JAC = GA(합금화용융아연도금) — 용접·도장성 우수, 파우더링 주의","sc":[3,2,9,8,7]},
+{"id":113,"n":"JAC780Y","cat":"판재","tg":["일본","GA도금","DP강","초고장력"],"std":{"ks":"SGAFC780 (유사)","jis":"JAC780Y","aisi":"DP780-GA","din":"HCT780X+ZF (유사)"},"chem":"DP780 + GA 도금","ts":"780 이상","ys":"400~550","el":"15 이상","hb":"HRB 95~102","hrc":"—","htok":"불필요","ht":"—","uses":"방청 요구 초고장력 보강재","note":"—","sc":[7,5,5,6,5]},
+{"id":114,"n":"Q235B","cat":"구조용강","tg":["중국","GB","일반구조","용접"],"std":{"ks":"SS275 (유사)","jis":"SS400 (유사)","aisi":"A36 (유사)","din":"S235JR (유사)"},"chem":"C≤0.20, Mn≤1.4","ts":"370~500","ys":"235 이상","el":"26 이상","hb":"HB 110~140","hrc":"—","htok":"불가","ht":"—","uses":"구조물, 베이스, 프레임(중국 GB)","note":"중국 GB/T 700. 중국산 강재·설비 도면에 빈출","sc":[4,2,8,8,10]},
+{"id":115,"n":"Q355B","cat":"구조용강","tg":["중국","GB","용접구조","고장력"],"std":{"ks":"SM355 (유사)","jis":"SM490A (유사)","aisi":"A572 Gr.50 (유사)","din":"S355JR 동급"},"chem":"C≤0.24, Mn≤1.60","ts":"470~630","ys":"355 이상","el":"22 이상","hb":"HB 130~160","hrc":"—","htok":"불가","ht":"—","uses":"용접 구조물, 산업기계(중국 GB)","note":"구 Q345B. GB/T 1591","sc":[5,3,8,8,9]},
+{"id":116,"n":"B170P1 (바오스틸)","cat":"판재","tg":["중국","바오스틸","IF강","P첨가","외판"],"std":{"ks":"—","jis":"—","aisi":"IF-Rephos","din":"HC180P (유사)"},"chem":"C≤0.01, P0.05~0.09 (P첨가 IF)","ts":"340 이상","ys":"170~230","el":"38 이상","hb":"HRB 50~62","hrc":"—","htok":"불필요","ht":"—","uses":"외판 패널, 내판(중국계 OEM)","note":"바오스틸 자동차 냉연 호칭. 인 첨가 고강도 IF","sc":[4,2,9,8,7]},
+{"id":117,"n":"B180H1 (바오스틸)","cat":"판재","tg":["중국","바오스틸","BH강","소부경화","외판"],"std":{"ks":"—","jis":"—","aisi":"BH180","din":"HC180B 동급"},"chem":"C≤0.06 (소부경화형)","ts":"340 이상","ys":"180~240 (소부 후 상승)","el":"36 이상","hb":"HRB 50~64","hrc":"—","htok":"불필요","ht":"도장 소부로 항복 +30MPa","uses":"후드·도어 외판(중국계)","note":"—","sc":[4,2,9,8,7]},
+{"id":118,"n":"B340LA (바오스틸)","cat":"판재","tg":["중국","바오스틸","HSLA","냉연"],"std":{"ks":"—","jis":"—","aisi":"HSLA340","din":"HC340LA 동급"},"chem":"C≤0.10, Nb/Ti","ts":"440 이상","ys":"340~440","el":"22 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"멤버, 브래킷(중국계)","note":"—","sc":[5,4,7,7,8]},
+{"id":119,"n":"Ductibor 1000 (아르셀로미탈)","cat":"판재","tg":["유럽","아르셀로미탈","핫스탬핑","연성","테일러드"],"std":{"ks":"—","jis":"—","aisi":"—","din":"— (AM 상표)"},"chem":"저C 보론강 + Al-Si 도금","ts":"성형 후 1,000~1,150","ys":"성형 후 800 이상","el":"성형 후 6 이상","hb":"성형 전 HB 약 160","hrc":"성형 후 30~36","htok":"필수 (다이퀜칭)","ht":"900~930℃ → 금형 내 급랭","uses":"핫스탬핑 부품의 연성 요구부(하단 필러), 테일러드 블랭크 조합","note":"Usibor(1500/2000)와 레이저 용접 TWB로 조합 — 충돌 시 변형 유도부","sc":[8,6,6,3,4]},
+{"id":120,"n":"Fortiform 1050 (아르셀로미탈)","cat":"판재","tg":["유럽","아르셀로미탈","3세대강","냉연","고연신"],"std":{"ks":"—","jis":"—","aisi":"Gen3 1050","din":"— (AM 상표)"},"chem":"중Mn 3세대 AHSS","ts":"1,050 이상","ys":"700~880","el":"14 이상","hb":"HRC 30~35 상당","hrc":"—","htok":"불필요","ht":"—","uses":"필러, 사이드실 — 냉간성형 초고장력","note":"DP980 대비 성형성 우수한 3세대강(QP980 경쟁재)","sc":[8,6,6,5,4]},
+{"id":121,"n":"phs-ultraform 1500 (뵈스트알피네)","cat":"판재","tg":["유럽","뵈스트알피네","핫스탬핑","아연도금","간접공법"],"std":{"ks":"—","jis":"—","aisi":"—","din":"22MnB5+Z (GI PHS)"},"chem":"22MnB5 + 아연(GI) 도금","ts":"성형 후 1,470~1,600","ys":"성형 후 1,000 이상","el":"성형 후 5 이상","hb":"성형 전 HB 약 170","hrc":"성형 후 45~50","htok":"필수 (다이퀜칭)","ht":"간접(프리포밍 후 가열) 또는 직접공법","uses":"음극방식 요구 핫스탬핑 부품(하부 차체)","note":"Al-Si 도금(Usibor) 대비 희생방식 성능 우수 — 습식 부위 유리. LME 크랙 관리 필요","sc":[10,8,4,3,4]},
+{"id":122,"n":"Docol 1500M (SSAB)","cat":"판재","tg":["유럽","SSAB","MS강","초고장력","롤포밍"],"std":{"ks":"—","jis":"—","aisi":"MS1500 동급","din":"HDT1500M (유사)"},"chem":"C≤0.17, 마르텐사이트 조직","ts":"1,470~1,700","ys":"1,200 이상","el":"4 이상","hb":"HRC 42~46 상당","hrc":"—","htok":"불필요","ht":"—","uses":"범퍼빔, 임팩트빔, 시트 부재","note":"SSAB 냉간압연 마르텐사이트강 상표. 롤포밍·단순 굽힘 전용","sc":[10,8,2,3,4]},
+{"id":123,"n":"HX340LAD+Z","cat":"판재","tg":["유럽","도금","HSLA","EN10346"],"std":{"ks":"—","jis":"—","aisi":"HSLA340-GI","din":"HX340LAD+Z / 1.0933"},"chem":"C≤0.11, Nb/Ti + Zn 도금","ts":"410~510","ys":"340~420","el":"21 이상","hb":"HRB 70~82","hrc":"—","htok":"불필요","ht":"—","uses":"방청 요구 구조 멤버, 브래킷","note":"EN 10346 도금 HSLA — HC340LA의 GI 버전","sc":[5,4,7,7,7]},
+{"id":124,"n":"PosMAC (포스코 ZM도금)","cat":"판재","tg":["포스코","고내식","ZM도금","아연마그네슘"],"std":{"ks":"— (포스코 상표)","jis":"— (ZAM 유사)","aisi":"—","din":"ZM 도금 (EN: +ZM)"},"chem":"Zn-Mg3-Al2.5 합금도금 (모재 등급별)","ts":"모재 등급에 따름 (270~590)","ys":"모재 등급에 따름","el":"모재 등급에 따름","hb":"—","hrc":"—","htok":"불필요","ht":"—","uses":"태양광 구조물, 강구조, 고내식 요구 성형 부품","note":"GI 대비 내식성 5~10배, 절단면 자가방청. 닛폰스틸 ZAM·유럽 Magnelis 동계열","sc":[4,3,8,8,7]},
+{"id":125,"n":"초경합금 V10/K10","cat":"공구강·금형재","tg":["초경","텅스텐카바이드","내마모","파인블랭킹","다이"],"std":{"ks":"V10 (KS 사용분류)","jis":"V10 / VC-10","aisi":"C-2 (유사)","din":"ISO K10"},"chem":"WC + Co 5~6% (소결합금)","ts":"항절력 2,500~3,000 (MPa)","ys":"—","el":"—","hb":"—","hrc":"HRA 91.0~92.5 (HRC 환산 불가 영역)","htok":"— (소결체, 열처리 없음)","ht":"소결 완성체 — 연삭·방전가공만 가능","uses":"인발 다이, 고수명 블랭킹 다이 인서트, 전자재 정밀 금형","note":"저Co = 최고 경도·내마모, 인성 낮음. 프로그레시브 대량생산 다이 표준","sc":[10,10,2,1,2]},
+{"id":126,"n":"초경합금 V30/K20","cat":"공구강·금형재","tg":["초경","텅스텐카바이드","파인블랭킹","펀치","프로그레시브"],"std":{"ks":"V30","jis":"V30 / VC-30","aisi":"C-10 (유사)","din":"ISO K20~K30"},"chem":"WC + Co 9~11%","ts":"항절력 3,200~3,600 (MPa)","ys":"—","el":"—","hb":"—","hrc":"HRA 89.5~91.0","htok":"— (소결체)","ht":"연삭·방전가공만 가능","uses":"파인블랭킹 펀치·다이, 프로그레시브 인서트, 고속 전단 펀치","note":"경도-인성 균형형 — 금형용 초경의 표준 등급","sc":[10,10,3,1,2]},
+{"id":127,"n":"초경합금 V50/K40","cat":"공구강·금형재","tg":["초경","텅스텐카바이드","내충격","펀치"],"std":{"ks":"V50","jis":"V50 / VC-50","aisi":"C-12 (유사)","din":"ISO K40"},"chem":"WC + Co 13~15%","ts":"항절력 3,800~4,300 (MPa)","ys":"—","el":"—","hb":"—","hrc":"HRA 87.5~89.0","htok":"— (소결체)","ht":"연삭·방전가공만 가능","uses":"충격 받는 펀치, 후판 전단, 냉간 단조 펀치","note":"고Co = 인성 우선. 치핑 발생 부위에 V30 대신 적용","sc":[9,9,4,1,2]},
+{"id":128,"n":"SKH55","cat":"공구강·금형재","tg":["고속도강","코발트","펀치","커터"],"std":{"ks":"SKH55","jis":"SKH55","aisi":"M35","din":"1.3243 (HS6-5-2-5)"},"chem":"C0.9, W6, Mo5, Cr4, V2, Co5","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤269","hrc":"63~66","htok":"가능","ht":"담금질 1,190~1,230℃ → 뜨임 550~570℃ 3회","uses":"고부하 피어싱 펀치, 밀링커터, 브로치","note":"SKH51 + Co — 고온경도·내마모 향상","sc":[9,10,4,3,4]},
+{"id":129,"n":"SKH59","cat":"공구강·금형재","tg":["고속도강","코발트","고경도","펀치"],"std":{"ks":"SKH59","jis":"SKH59","aisi":"M42","din":"1.3247 (HS2-9-1-8)"},"chem":"C1.1, Mo9.5, W1.5, Cr4, V1.2, Co8","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤277","hrc":"65~68","htok":"가능","ht":"담금질 1,160~1,190℃ → 뜨임 540~560℃ 3회","uses":"초경 대체 소경 펀치, 난삭재 절삭공구","note":"HSS 최고 경도급 — 인성 낮아 형상 설계 주의","sc":[9,10,3,2,3]},
+{"id":130,"n":"HAP40 (분말하이스)","cat":"공구강·금형재","tg":["분말하이스","프로테리얼","파인블랭킹","냉간단조","펀치"],"std":{"ks":"— (프로테리얼 상표)","jis":"SKH40 상당","aisi":"— (PM HSS)","din":"—"},"chem":"C1.3, W6, Mo5, Cr4, V3, Co8 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤269","hrc":"65~68","htok":"가능","ht":"담금질 1,160~1,190℃ → 뜨임 550~570℃ 3회","uses":"파인블랭킹 펀치, 냉간 단조 펀치, 프로그레시브 고부하 인서트","note":"분말 균질조직 — HSS 경도에 인성 보강. 국내 파인블랭킹 표준재 중 하나","sc":[9,10,6,3,3]},
+{"id":131,"n":"ASP23 (분말하이스)","cat":"공구강·금형재","tg":["분말하이스","에라스틸","파인블랭킹","펀치","다이"],"std":{"ks":"— (Erasteel 상표)","jis":"SKH53 상당 (M3:2)","aisi":"CPM M3 (동급)","din":"1.3395 (HS6-5-3)"},"chem":"C1.28, W6.4, Mo5, Cr4.2, V3.1 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤260","hrc":"62~66","htok":"가능","ht":"담금질 1,050~1,180℃ → 뜨임 560℃ 3회","uses":"파인블랭킹 펀치·다이, 정밀 블랭킹, 냉간 성형 공구","note":"유럽계 파인블랭킹 표준 분말하이스 (ASP2023)","sc":[9,9,6,3,3]},
+{"id":132,"n":"ASP30 (분말하이스)","cat":"공구강·금형재","tg":["분말하이스","에라스틸","코발트","펀치"],"std":{"ks":"—","jis":"—","aisi":"CPM Rex 45 (유사)","din":"1.3294 (HS6-5-3-8)"},"chem":"ASP23 + Co8.5 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤300","hrc":"63~67","htok":"가능","ht":"담금질 1,050~1,180℃ → 뜨임 560℃ 3회","uses":"고부하 파인블랭킹 펀치, 고온 마찰 부위 공구","note":"Co 첨가로 고온경도·압축강도 향상 (ASP2030)","sc":[9,10,5,3,3]},
+{"id":133,"n":"ASP60 (분말하이스)","cat":"공구강·금형재","tg":["분말하이스","에라스틸","최고경도","내마모"],"std":{"ks":"—","jis":"—","aisi":"CPM Rex 76 (유사)","din":"1.3292 (HS6-7-6-10)"},"chem":"C2.3, W6.5, Mo7, V6.5, Co10.5 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤340","hrc":"65~69","htok":"가능","ht":"담금질 1,100~1,180℃ → 뜨임 560℃ 3회","uses":"초경 대체 펀치·다이, 극한 내마모 부위","note":"분말하이스 최고 경도급 — 초경보다 인성 높고 방전가공 가능","sc":[10,10,4,2,2]},
+{"id":134,"n":"CPM 10V","cat":"공구강·금형재","tg":["분말강","크루서블","고바나듐","내마모","블랭킹"],"std":{"ks":"— (Crucible 상표)","jis":"—","aisi":"A11 (AISI)","din":"—"},"chem":"C2.45, Cr5.25, V9.75, Mo1.3 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤277","hrc":"60~63","htok":"가능","ht":"담금질 1,065~1,150℃ → 뜨임 540~560℃ 3회","uses":"대량생산 블랭킹·트림 다이, 내마모 인서트","note":"고V 탄화물 — 내마모 극대화. 연삭성 낮음(CBN 연삭 권장)","sc":[8,10,5,2,3]},
+{"id":135,"n":"CPM M4","cat":"공구강·금형재","tg":["분말하이스","크루서블","펀치","인성"],"std":{"ks":"—","jis":"SKH53 (유사)","aisi":"M4 (PM)","din":"1.3351 (유사)"},"chem":"C1.42, W5.5, Mo5.25, Cr4, V4 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤260","hrc":"62~66","htok":"가능","ht":"담금질 1,120~1,175℃ → 뜨임 550℃ 3회","uses":"파인블랭킹 펀치, 정밀 전단 공구(북미계)","note":"ASP23 대응 북미 분말하이스","sc":[9,9,6,3,3]},
+{"id":136,"n":"Vanadis 8 (분말강)","cat":"공구강·금형재","tg":["분말강","우데홀름","고바나듐","초내마모"],"std":{"ks":"— (Uddeholm 상표)","jis":"—","aisi":"A11급 (유사)","din":"—"},"chem":"C2.3, Cr4.8, Mo3.6, V8.0 (분말야금)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤280","hrc":"60~64","htok":"가능","ht":"담금질 1,020~1,100℃ → 고온뜨임 525~560℃","uses":"초대량 블랭킹 다이, 내마모 극한 부위","note":"Vanadis 4E보다 내마모 특화 (인성은 낮음)","sc":[9,10,5,2,2]},
+{"id":137,"n":"K340 ISODUR (뵐러)","cat":"공구강·금형재","tg":["뵐러","8Cr","냉간공구강","인성"],"std":{"ks":"— (Böhler 상표)","jis":"SKD11 개량급","aisi":"—","din":"~1.2383"},"chem":"C1.1, Cr8.3, Mo2.1, V0.5 + ESR","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤250","hrc":"57~62","htok":"가능","ht":"담금질 1,020~1,060℃ → 고온뜨임 520~540℃ 2회","uses":"트림·피어싱 다이, 초고장력강 전단날","note":"DC53과 동급 경쟁재(유럽계). 질화·PVD 적합","sc":[8,9,7,5,5]},
+{"id":138,"n":"SLD-MAGIC (프로테리얼)","cat":"공구강·금형재","tg":["프로테리얼","히타치","8Cr","냉간공구강","치수안정"],"std":{"ks":"— (프로테리얼 상표)","jis":"SKD11 개량급","aisi":"—","din":"—"},"chem":"C1.0, Cr8 계열 + 윤활성 개선 설계","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"58~63","htok":"가능","ht":"담금질 1,000~1,050℃ → 고온뜨임 520~540℃","uses":"초고장력강 트림·폼 다이, 카징(응착) 문제 부위","note":"열처리 치수변화 극소 + 내카징성 — 와이어컷 후 변형 민감 부품에 유리","sc":[8,9,7,5,5]},
+{"id":139,"n":"YXR33 (매트릭스하이스)","cat":"공구강·금형재","tg":["프로테리얼","매트릭스하이스","초인성","치핑대책"],"std":{"ks":"— (프로테리얼 상표)","jis":"—","aisi":"—","din":"—"},"chem":"저C 매트릭스 HSS (탄화물 저감 설계)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"52~58","htok":"가능","ht":"담금질 1,100~1,140℃ → 뜨임 550~580℃","uses":"깨짐·치핑 다발 펀치, 후판 전단날, 냉간 단조형","note":"인성 SKD11의 4배 이상 — 깨짐 문제 최후 수단. 내마모는 표면처리(PVD/질화)로 보완","sc":[8,7,10,4,3]},
+{"id":140,"n":"YXR7 (매트릭스하이스)","cat":"공구강·금형재","tg":["프로테리얼","매트릭스하이스","인성","펀치"],"std":{"ks":"— (프로테리얼 상표)","jis":"—","aisi":"—","din":"—"},"chem":"매트릭스 HSS (C 저감 + Mo/W)","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"58~62","htok":"가능","ht":"담금질 1,100~1,150℃ → 뜨임 550~580℃","uses":"초고장력강 트림 펀치, 정밀 전단날","note":"YXR33보다 경도 높고 인성은 SKD11의 2~3배","sc":[8,8,8,4,3]},
+{"id":141,"n":"DRM3 (대동 매트릭스)","cat":"공구강·금형재","tg":["대동특수강","매트릭스하이스","인성"],"std":{"ks":"— (대동특수강 상표)","jis":"—","aisi":"—","din":"—"},"chem":"매트릭스 HSS 계열","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"58~62","htok":"가능","ht":"담금질 1,100~1,150℃ → 고온뜨임","uses":"치핑 대책 펀치·다이, 냉간 단조형","note":"YXR 시리즈 대응 대동특수강 매트릭스강","sc":[8,8,8,4,3]},
+{"id":142,"n":"SKD12","cat":"공구강·금형재","tg":["냉간공구강","공랭","변형소","게이지"],"std":{"ks":"STD12","jis":"SKD12","aisi":"A2","din":"1.2363 (X100CrMoV5)"},"chem":"C0.95~1.05, Cr4.8~5.5, Mo0.9~1.4, V0.15~0.35","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤255","hrc":"57~60","htok":"가능","ht":"담금질 930~980℃ 공랭 → 뜨임 180~210℃","uses":"중형 블랭킹 다이, 게이지, 성형 롤","note":"SKD11보다 인성 우수·내마모 낮음. 공랭으로 변형 적음","sc":[7,8,6,5,7]},
+{"id":143,"n":"SKS93","cat":"공구강·금형재","tg":["탄소공구강","저가","소형","유냉"],"std":{"ks":"STS93","jis":"SKS93","aisi":"O1 간이급","din":"—"},"chem":"C1.0~1.1, Cr0.2~0.6","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤217","hrc":"58~62","htok":"가능","ht":"담금질 780~820℃ 유냉 → 뜨임 150~200℃","uses":"소형 다이, 스트리퍼 인서트, 간이 공구","note":"SKS3의 W 무첨가 염가판","sc":[6,8,4,7,10]},
+{"id":144,"n":"SKT4","cat":"공구강·금형재","tg":["열간","단조형","다이홀더","인성"],"std":{"ks":"STF4","jis":"SKT4","aisi":"L6 (유사)","din":"1.2714 (55NiCrMoV7)"},"chem":"C0.5~0.6, Ni1.3~2.0, Cr0.7~1.0, Mo0.2~0.5","ts":"조질 1,200~1,500","ys":"—","el":"—","hb":"조질 HB 352~444","hrc":"38~47 (조질)","htok":"가능","ht":"담금질 840~870℃ 유냉 → 뜨임 450~600℃","uses":"열간 단조 다이, 다이 홀더, 섕크, 프레스 램 어댑터","note":"고인성 열간·홀더 겸용강. 대형 블록 수급 용이","sc":[7,6,9,5,6]},
+{"id":145,"n":"STAVAX ESR (우데홀름)","cat":"공구강·금형재","tg":["우데홀름","사출금형","경면","내식","스테인리스계"],"std":{"ks":"— (Uddeholm 상표)","jis":"SUS420J2 개량","aisi":"420 ESR","din":"~1.2083 ESR"},"chem":"C0.38, Cr13.6, V0.3 + ESR 정련","ts":"—","ys":"—","el":"—","hb":"어닐링 HB≤200","hrc":"45~52","htok":"가능","ht":"담금질 1,020~1,050℃ → 뜨임 250℃(52HRC) 또는 520℃(45HRC)","uses":"경면 사출금형 캐비티, 렌즈 금형, 내식 금형","note":"경면연마성 최상급 — 투명 제품·의료용 몰드 표준","sc":[7,8,5,5,4]},
+{"id":146,"n":"P20 개량 (1.2311)","cat":"공구강·금형재","tg":["프리하든","사출금형","몰드베이스","대형"],"std":{"ks":"— (HP4A 상당)","jis":"PX5 상당","aisi":"P20 (Mod.)","din":"1.2311 (40CrMnMo7)"},"chem":"C0.4, Cr1.9, Mn1.5, Mo0.2","ts":"약 1,000 (출하 상태)","ys":"—","el":"—","hb":"출하 HB 280~325","hrc":"28~33 (프리하든)","htok":"불필요 (프리하든)","ht":"열처리 없이 가공 후 사용. 필요 시 질화·화염경화 병용","uses":"사출 몰드베이스, 대형 캐비티·코어, 블로우 몰드","note":"세계에서 가장 널리 쓰이는 사출금형 프리하든강. 1.2738(P20+Ni)은 대형 후물용","sc":[6,5,7,7,7]}
+]}
+</script>
+
+<script id="mainjs">
+"use strict";
+const PRISTINE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+const DB = JSON.parse(document.getElementById('dbdata').textContent);
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AXES = ['강도','경도','인성·연성','가공성','경제성'];
+const COLORS = ['#534AB7','#0F6E56','#C2410C','#185FA5'];
+let cmp = [], curId = null, isAdmin = false, fh = null;
+
+function catCls(c){ if(c.indexOf('공구강')===0)return'b-공구강'; if(c.indexOf('구조')===0)return'b-구조용강'; if(c.indexOf('스테')===0)return'b-스테인리스'; return'b-판재'; }
+function toast(m){ const t=$('toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._tm); t._tm=setTimeout(()=>t.style.display='none',3500); }
+function byId(id){ return DB.grades.find(g=>g.id===id); }
+
+document.querySelectorAll('button.nav').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('button.nav').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    ['reco','search','compare','admin'].forEach(v=>$('v-'+v).hidden=(v!==b.dataset.v));
+  });
+});
+function goView(v){ document.querySelector('button.nav[data-v="'+v+'"]').click(); }
+
+function renderList(){
+  const q=$('q').value.trim().toLowerCase(), cat=$('qCat').value;
+  const rows=DB.grades.filter(g=>{
+    if(cat && g.cat!==cat) return false;
+    if(!q) return true;
+    const hay=(g.n+' '+Object.values(g.std).join(' ')+' '+g.tg.join(' ')+' '+g.uses+' '+g.cat).toLowerCase();
+    return q.split(/\s+/).every(k=>hay.indexOf(k)>=0);
+  });
+  $('glist').innerHTML = rows.length ? rows.map(g=>
+    '<div class="gitem'+(g.id===curId?' on':'')+'" onclick="showDetail('+g.id+')"><b>'+esc(g.n)+'</b><span>'+esc(g.cat)+'</span></div>'
+  ).join('') : '<p style="color:#999;padding:10px">검색 결과 없음</p>';
+}
+
+function showDetail(id){
+  curId=id; const g=byId(id); if(!g) return; renderList();
+  const inCmp = cmp.indexOf(id)>=0;
+  $('detail').innerHTML =
+    '<div class="row" style="justify-content:space-between"><div class="row"><span style="font-size:19px;font-weight:600">'+esc(g.n)+'</span>'+
+    '<span class="badge '+catCls(g.cat)+'">'+esc(g.cat)+'</span></div>'+
+    '<button class="btn'+(inCmp?'':' pri')+'" onclick="toggleCmp('+g.id+')">'+(inCmp?'비교에서 제거':'📊 비교에 추가')+'</button></div>'+
+    '<div style="margin-top:6px">'+g.tg.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+
+    '<table class="info">'+
+    '<tr><td>동등 규격</td><td>KS <b>'+esc(g.std.ks)+'</b> · JIS <b>'+esc(g.std.jis)+'</b> · AISI/상용 <b>'+esc(g.std.aisi)+'</b> · DIN/EN <b>'+esc(g.std.din)+'</b></td></tr>'+
+    '<tr><td>화학성분 (%)</td><td>'+esc(g.chem)+'</td></tr>'+
+    '<tr><td>열처리</td><td>'+esc(g.ht||'—')+'</td></tr>'+
+    '<tr><td>주 사용 부품</td><td>'+esc(g.uses)+'</td></tr>'+
+    '</table>'+
+    '<div class="mcards">'+
+    mc('인장강도 (MPa)',g.ts)+mc('항복강도 (MPa)',g.ys)+mc('연신율 (%)',g.el)+
+    mc('경도 · 열처리 전',g.hb)+mc('경도 · 열처리 후 (HRC)',g.hrc)+mc('열처리 가능여부',g.htok)+
+    '</div>'+
+    (g.note?'<p class="note">💬 '+esc(g.note)+'</p>':'')+
+    '<p class="note">※ 대표값(참고용)입니다. 발주·설계 확정 시 밀시트 및 KS/JIS 원문 규격을 확인하세요.</p>';
+}
+function mc(l,v){ return '<div class="mcard"><p>'+esc(l)+'</p><b>'+esc(v&&String(v).trim()?v:'—')+'</b></div>'; }
+
+function toggleCmp(id){
+  const i=cmp.indexOf(id);
+  if(i>=0){ cmp.splice(i,1); }
+  else { if(cmp.length>=4){ toast('비교는 최대 4개까지입니다.'); return; } cmp.push(id); toast(byId(id).n+' 비교에 추가됨 ('+cmp.length+'/4)'); }
+  if(curId) showDetail(curId);
+  renderCmp();
+}
+
+function renderCmpSelect(){
+  const cats=[...new Set(DB.grades.map(g=>g.cat))];
+  $('cmpAdd').innerHTML='<option value="">+ 강종 추가 (최대 4)</option>'+cats.map(c=>
+    '<optgroup label="'+esc(c)+'">'+DB.grades.filter(g=>g.cat===c&&cmp.indexOf(g.id)<0).map(g=>'<option value="'+g.id+'">'+esc(g.n)+'</option>').join('')+'</optgroup>'
+  ).join('');
+}
+$('cmpAdd').addEventListener('change',e=>{ const v=+e.target.value; if(v) toggleCmp(v); e.target.value=''; });
+
+function renderCmp(){
+  const n=$('cmpN'); n.textContent=cmp.length; n.style.display=cmp.length?'inline-block':'none';
+  renderCmpSelect();
+  const chips=cmp.map(id=>'<span class="chip">'+esc(byId(id).n)+' <u onclick="toggleCmp('+id+')">✕</u></span>').join('');
+  const sel=$('cmpAdd').outerHTML;
+  $('cmpChips').innerHTML=chips+sel;
+  $('cmpChips').querySelector('select').addEventListener('change',e=>{ const v=+e.target.value; if(v) toggleCmp(v); e.target.value=''; });
+  if(cmp.length<2){
+    $('cmpOut').innerHTML='<p style="color:#999;margin-top:10px">검색 화면 또는 위 목록에서 강종을 2개 이상 추가하세요.</p>';
+    $('radar').style.display='none'; return;
+  }
+  const gs=cmp.map(byId);
+  const row=(label,fn)=>'<tr><td>'+label+'</td>'+gs.map(g=>'<td>'+esc(fn(g)||'—')+'</td>').join('')+'</tr>';
+  $('cmpOut').innerHTML='<table class="cmp"><tr><th>항목</th>'+gs.map((g,i)=>'<th style="color:'+COLORS[i]+'">'+esc(g.n)+'</th>').join('')+'</tr>'+
+    row('분류',g=>g.cat)+
+    row('KS / JIS',g=>g.std.ks+' / '+g.std.jis)+
+    row('AISI / DIN',g=>g.std.aisi+' / '+g.std.din)+
+    row('화학성분',g=>g.chem)+
+    row('인장강도 (MPa)',g=>g.ts)+
+    row('항복강도 (MPa)',g=>g.ys)+
+    row('연신율 (%)',g=>g.el)+
+    row('경도 · 열처리 전',g=>g.hb)+
+    row('경도 · 열처리 후',g=>g.hrc)+
+    row('열처리 가능여부',g=>g.htok)+
+    row('열처리 조건',g=>g.ht)+
+    row('주 사용 부품',g=>g.uses)+
+    '</table>';
+  drawRadar(gs);
+}
+
+function drawRadar(gs){
+  const cv=$('radar'); cv.style.display='block';
+  const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=190, cy=155, R=115, N=AXES.length;
+  const pt=(i,r)=>{ const a=-Math.PI/2 + i*2*Math.PI/N; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; };
+  ctx.strokeStyle='#ddd'; ctx.fillStyle='#8a887f'; ctx.font='12px Segoe UI, Malgun Gothic'; ctx.lineWidth=1;
+  for(let lv=1;lv<=5;lv++){ ctx.beginPath(); for(let i=0;i<=N;i++){ const p=pt(i%N,R*lv/5); i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); } ctx.stroke(); }
+  for(let i=0;i<N;i++){ const p=pt(i,R); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p[0],p[1]); ctx.stroke();
+    const lp=pt(i,R+22); ctx.textAlign=Math.abs(lp[0]-cx)<10?'center':(lp[0]>cx?'left':'right');
+    ctx.fillText(AXES[i], lp[0], lp[1]+4); }
+  gs.forEach((g,gi)=>{
+    ctx.strokeStyle=COLORS[gi]; ctx.fillStyle=COLORS[gi]+'22'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){ const v=(g.sc&&g.sc[i%N]!=null?g.sc[i%N]:5); const p=pt(i%N,R*v/10); i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); }
+    ctx.fill(); ctx.stroke();
+  });
+  ctx.textAlign='left'; ctx.font='13px Segoe UI, Malgun Gothic';
+  gs.forEach((g,gi)=>{ ctx.fillStyle=COLORS[gi]; ctx.fillRect(400, 60+gi*26, 14, 14); ctx.fillStyle='#333'; ctx.fillText(g.n, 422, 72+gi*26); });
+  ctx.fillStyle='#999'; ctx.font='11px Segoe UI, Malgun Gothic';
+  ctx.fillText('상대 평가 점수 (0~10, 대표값 기준)', 400, 72+gs.length*26+10);
+}
+
+function runReco(){
+  const cat=$('recoCat').value, kwRaw=$('recoKw').value.trim();
+  const kws=kwRaw.split(/[\s,·/]+/).filter(Boolean);
+  if(!kws.length){ $('recoOut').innerHTML='<p class="note" style="margin-top:12px">키워드를 입력하거나 빠른 검색 버튼을 눌러 주세요.</p>'; return; }
+  let res=DB.grades.filter(g=>!cat||g.cat===cat).map(g=>{
+    let s=0; const why=new Set();
+    kws.forEach(k=>{ const kl=k.toLowerCase();
+      if(g.tg.some(t=>{const tl=t.toLowerCase(); return tl.indexOf(kl)>=0||kl.indexOf(tl)>=0;})){ s+=4; why.add(k); }
+      else if(g.uses.toLowerCase().indexOf(kl)>=0){ s+=3; why.add(k); }
+      else if((g.n+' '+Object.values(g.std).join(' ')).toLowerCase().indexOf(kl)>=0){ s+=2; why.add(k); }
+      else if((g.note||'').toLowerCase().indexOf(kl)>=0){ s+=1; why.add(k); }
+    });
+    return {g,s,why:[...why]};
+  }).filter(r=>r.s>0).sort((a,b)=>b.s-a.s).slice(0,5);
+  if(!res.length){ $('recoOut').innerHTML='<p class="note" style="margin-top:12px">일치하는 강종이 없습니다. 키워드를 바꾸거나 분류를 "전체"로 해보세요.</p>'; return; }
+  $('recoOut').innerHTML=res.map((r,i)=>{
+    const g=r.g;
+    return '<div class="reco-card" onclick="goDetail('+g.id+')">'+
+      '<span class="rank">'+(i+1)+'순위</span>'+
+      '<div style="flex:1;min-width:0">'+
+      '<div class="row"><b style="font-size:15px">'+esc(g.n)+'</b><span class="badge '+catCls(g.cat)+'">'+esc(g.cat)+'</span>'+
+      '<span style="font-size:12px;color:#888">경도(열처리 후): '+esc(g.hrc||'—')+' · 인장: '+esc(g.ts||'—')+'</span></div>'+
+      '<p style="font-size:12.5px;color:#555;margin-top:4px">'+esc(g.uses)+'</p>'+
+      '<p style="font-size:11.5px;color:#8a887f;margin-top:3px">일치: '+r.why.map(esc).join(', ')+(g.note?' — '+esc(g.note):'')+'</p>'+
+      '</div><span style="color:#bbb">›</span></div>';
+  }).join('')+'<p class="note">카드를 클릭하면 상세 정보로 이동합니다.</p>';
+}
+function goDetail(id){ goView('search'); showDetail(id); }
+$('recoBtn').addEventListener('click',runReco);
+$('recoKw').addEventListener('keydown',e=>{ if(e.key==='Enter') runReco(); });
+$('recoPresets').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ $('recoKw').value=b.textContent; runReco(); }));
+
+$('q').addEventListener('input',renderList);
+$('qCat').addEventListener('change',renderList);
+
+$('pwBtn').addEventListener('click',()=>{
+  if($('pwIn').value===DB.meta.pw){ isAdmin=true; $('adminGate').hidden=true; $('adminBody').hidden=false; renderAdmin(); }
+  else toast('비밀번호가 다릅니다.');
+});
+$('pwIn').addEventListener('keydown',e=>{ if(e.key==='Enter') $('pwBtn').click(); });
+$('pwChg').addEventListener('click',()=>{
+  const v=$('pwNew').value.trim();
+  if(v.length<4){ toast('비밀번호는 4자 이상으로 해주세요.'); return; }
+  DB.meta.pw=v; $('pwNew').value=''; toast('비밀번호 변경됨 — [파일에 저장]을 눌러야 확정됩니다.');
+});
+
+function renderAdmin(){
+  $('adminList').innerHTML='<table class="cmp" style="table-layout:auto"><tr><th>강종</th><th>분류</th><th>경도(HT 후)</th><th style="width:130px"></th></tr>'+
+    DB.grades.map(g=>'<tr><td style="color:#222;font-weight:600;width:auto">'+esc(g.n)+'</td><td>'+esc(g.cat)+'</td><td>'+esc(g.hrc||'—')+'</td>'+
+    '<td><button class="btn" onclick="editG('+g.id+')">수정</button> <button class="btn warn" onclick="delG('+g.id+')">삭제</button></td></tr>').join('')+'</table>';
+}
+function delG(id){
+  const g=byId(id);
+  if(confirm('['+g.n+'] 강종을 삭제할까요?')){
+    DB.grades=DB.grades.filter(x=>x.id!==id); cmp=cmp.filter(x=>x!==id);
+    if(curId===id){ curId=null; $('detail').innerHTML='<p style="color:#999">좌측 목록에서 강종을 선택하세요.</p>'; }
+    renderAdmin(); renderList(); renderCmp(); toast('삭제됨 — [파일에 저장]으로 확정하세요.');
+  }
+}
+function editG(id){ showForm(byId(id)); }
+$('btnNew').addEventListener('click',()=>showForm(null));
+
+function fld(l,id,v,ph){ return '<div><label>'+l+'</label><input type="text" id="f_'+id+'" value="'+esc(v)+'" placeholder="'+(ph||'')+'"></div>'; }
+function showForm(g){
+  const e=g||{n:'',cat:'판재',tg:[],std:{ks:'',jis:'',aisi:'',din:''},chem:'',ts:'',ys:'',el:'',hb:'',hrc:'',htok:'',ht:'',uses:'',note:'',sc:[5,5,5,5,5]};
+  $('adminForm').hidden=false;
+  $('adminForm').innerHTML='<b>'+(g?'강종 수정 — '+esc(g.n):'새 강종 추가')+'</b><div class="formgrid">'+
+    fld('강종명','n',e.n,'예: SKD11')+
+    '<div><label>분류</label><select id="f_cat">'+['판재','공구강·금형재','구조용강','스테인리스·비철'].map(c=>'<option'+(c===e.cat?' selected':'')+'>'+c+'</option>').join('')+'</select></div>'+
+    fld('태그 (쉼표 구분)','tg',e.tg.join(', '),'냉간, 트림, 내마모')+
+    fld('KS','ks',e.std.ks)+fld('JIS','jis',e.std.jis)+fld('AISI/상용','aisi',e.std.aisi)+fld('DIN/EN','din',e.std.din)+
+    fld('화학성분','chem',e.chem)+
+    fld('인장강도 (MPa)','ts',e.ts)+fld('항복강도 (MPa)','ys',e.ys)+fld('연신율 (%)','el',e.el)+
+    fld('경도 · 열처리 전','hb',e.hb)+fld('경도 · 열처리 후','hrc',e.hrc)+fld('열처리 가능여부','htok',e.htok,'가능 / 불가 / 불필요')+
+    fld('열처리 조건','ht',e.ht)+fld('주 사용 부품','uses',e.uses)+fld('비고','note',e.note)+
+    '<div><label>평가점수 0~10 ('+AXES.join('/')+')</label><input type="text" id="f_sc" value="'+e.sc.join(',')+'"></div>'+
+    '</div><div class="row" style="margin-top:12px"><button class="btn pri" id="fSave">'+(g?'수정 반영':'추가')+'</button><button class="btn" id="fCancel">취소</button></div>';
+  $('fCancel').addEventListener('click',()=>{ $('adminForm').hidden=true; });
+  $('fSave').addEventListener('click',()=>{
+    const v=id=>$('f_'+id).value.trim();
+    if(!v('n')){ toast('강종명을 입력하세요.'); return; }
+    const sc=v('sc').split(',').map(x=>Math.max(0,Math.min(10,parseFloat(x)||0)));
+    while(sc.length<5) sc.push(5);
+    const obj={ id: g?g.id:(Math.max(0,...DB.grades.map(x=>x.id))+1),
+      n:v('n'), cat:$('f_cat').value, tg:v('tg').split(',').map(s=>s.trim()).filter(Boolean),
+      std:{ks:v('ks'),jis:v('jis'),aisi:v('aisi'),din:v('din')},
+      chem:v('chem'), ts:v('ts'), ys:v('ys'), el:v('el'), hb:v('hb'), hrc:v('hrc'),
+      htok:v('htok'), ht:v('ht'), uses:v('uses'), note:v('note'), sc:sc.slice(0,5) };
+    if(g){ DB.grades[DB.grades.findIndex(x=>x.id===g.id)]=obj; } else { DB.grades.push(obj); }
+    $('adminForm').hidden=true;
+    renderAdmin(); renderList(); renderCmpSelect(); if(curId===obj.id) showDetail(obj.id);
+    toast((g?'수정':'추가')+'됨 — [파일에 저장]을 눌러 공유폴더에 반영하세요.');
+  });
+}
+
+const OPENTAG='<scr'+'ipt type="application/json" id="dbdata">';
+const CLOSETAG='</scr'+'ipt>';
+function buildHtml(){
+  DB.meta.updated=new Date().toISOString().slice(0,10);
+  const json=JSON.stringify(DB,null,1).replace(/</g,'\\u003c');
+  const re=new RegExp(OPENTAG.replace(/[.*+?^${}()|[\]\\/]/g,'\\$&')+'[\\s\\S]*?'+CLOSETAG.replace(/[.*+?^${}()|[\]\\/]/g,'\\$&'));
+  return PRISTINE.replace(re, ()=>OPENTAG+'\n'+json+'\n'+CLOSETAG);
+}
+function downloadHtml(name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([buildHtml()],{type:'text/html'}));
+  a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+$('btnBackup').addEventListener('click',()=>{ downloadHtml('강종박사_backup_'+new Date().toISOString().slice(0,10)+'.html'); toast('백업 파일이 다운로드되었습니다.'); });
+$('btnSave').addEventListener('click',async()=>{
+  if(window.showSaveFilePicker){
+    try{
+      if(!fh){ fh=await window.showSaveFilePicker({suggestedName:'강종박사.html',types:[{description:'HTML 파일',accept:{'text/html':['.html']}}]}); }
+      const w=await fh.createWritable(); await w.write(buildHtml()); await w.close();
+      updMeta(); toast('저장 완료 — 팀원은 파일을 다시 열면 최신 데이터가 보입니다.');
+      return;
+    }catch(e){ if(e.name==='AbortError') return; fh=null; }
+  }
+  downloadHtml('강종박사.html');
+  toast('브라우저가 직접 저장을 지원하지 않아 다운로드했습니다. 파일을 공유폴더에 덮어넣어 주세요.');
+});
+
+function updMeta(){ $('metaInfo').textContent='강종 '+DB.grades.length+'종 · 갱신 '+DB.meta.updated; }
+updMeta(); renderList(); renderCmp();
+</script>
+</body>
+</html>
